@@ -1,10 +1,24 @@
 ---
 title: "ProyectoAED2024"
 subtitle: "Análisis Exploratorio de Datos, Máster en Ciencia de Datos - UV"
-output:
+author: 
+  - name: "Julio García Bustos"
+  - name: "Alejandro Dionis Ros"
+  - name: "Gabriel Ivars Asensio"
+  - name: "Rebeca Company Barber"
+affiliation: 
+  - number: 1
+    email: "jugarbus@alumni.uv.es"
+  - number: 2
+    email: "nombre2@alumni.uv.es"
+  - number: 3
+    email: "nombre3@alumni.uv.es"
+  - number: 4
+    email: "nombre4@alumni.uv.es"
+output: 
   html_document:
     toc: yes
-    toc_depth: '3'
+    toc_depth: 3
     df_print: paged
   pdf_document:
     toc: yes
@@ -34,18 +48,4 @@ knitr::opts_chunk$set(fig.width=8, fig.height=4)
 
 
 
-```{r include=FALSE}
-# Especificamos las librerías necesarias en esta lista
-packages = c("tidyverse", "knitr", "ggplot2", "datasets", "RColorBrewer")
-# use this function to check if each package is on the local machine
-# if a package is installed, it will be loaded
-# if any are not, the missing package(s) will be installed and loaded
-package.check <- lapply(packages, FUN = function(x) {
-  if (!require(x, character.only = TRUE)) {
-    install.packages(x, dependencies = TRUE,repos='http://cran.rediris.es')
-    library(x, character.only = TRUE)
-  }
-})
-# verify they are loaded
-search()
-```
+
