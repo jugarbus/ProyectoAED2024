@@ -14,7 +14,7 @@ affiliation:
   - number: 3
     email: "nombre3@alumni.uv.es"
   - number: 4
-    email: "nombre4@alumni.uv.es"
+    email: "recombar@alumni.uv.es"
 output: 
   html_document:
     toc: yes
