@@ -67,7 +67,7 @@ diff_observations <- df_ori[na_diff, , drop = FALSE]
 diff_observations
 ```
 
-Parece ser que, para algunos municipios, al no disponerse el valor del indicador se codifica como "..".
+Parece ser que, para algunos municipios, al no disponerse el valor del indicador se codifica como "..". (Consultar razón específica de esta codificación)
 
 
 
@@ -95,4 +95,17 @@ Los datos faltantes en la variable Municipios son los valores asociados a Total 
 df2 <- df1 %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
 sapply(df2, function(x) sum(is.na(x)))
 ```
+
+
+Se eliminan las observaciones que tengan valores faltantes en todas las variables de los indicadores.
+
+
+
+```{r}
+ind <- df2[,-c(1:3)]
+missing_all <- which(rowSums(is.na(ind)) == ncol(ind))
+df3 <- df2[-missing_all,]
+sapply(df3, function(x) sum(is.na(x)))
+```
+
 
