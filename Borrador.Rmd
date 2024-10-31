@@ -57,7 +57,17 @@ sapply(df, function(x) sum(is.na(x)))
 sapply(df, class)
 ```
 
-¿No se por qué aumentan un poco los datos faltantes?
+Al modificar el tipo de la variable Total se aprecia un aumento del número de valores faltantes. Exploremos los posibles motivos.
+
+```{r}
+df_ori <- read_delim("./data/Indicadores.csv", delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = "."), trim_ws = TRUE)
+
+na_diff <- which(!is.na(df_ori$Total) & is.na(df$Total))
+diff_observations <- df_ori[na_diff, , drop = FALSE]
+diff_observations
+```
+
+Parece ser que, para algunos municipios, al no disponerse el valor del indicador se codifica como "..".
 
 
 
