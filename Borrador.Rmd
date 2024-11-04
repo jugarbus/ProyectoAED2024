@@ -14,87 +14,127 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 rm(list = ls())
-library("readr")
-library("tidyverse")
-library("dplyr")
+library(readr)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(visdat)
+library(naniar)
 ```
 
 
 
 ```{r}
 getOption("encoding")
-guess_encoding("./data/Indicadores.csv")
+guess_encoding("./data/demograficos.csv")
+guess_encoding("./data/economicos.csv")
+guess_encoding("./data/sociales.csv")
+
 ```
 El encoding es el que tenemos. Se importan los datos
 
 ```{r}
-# Leer el archivo con la codificación especificada
-df <- read_delim("./data/Indicadores.csv", delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = "."), trim_ws = TRUE)
-# Mostrar las primeras filas del archivo
-head(df)
+dem <- read_delim("./data/demograficos.csv", delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = "."), trim_ws = TRUE)
+
+eco <- read_delim("./data/economicos.csv", delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = "."), trim_ws = TRUE)
+
+soc <- read_delim("./data/sociales.csv", delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = "."), trim_ws = TRUE)
+
 ```
 
 
 ```{r}
-sapply(df, function(x) sum(is.na(x)))
-sapply(df, class)
-```
-La variable Total es de tipo character cuando debería ser numérica.
-
-```{r}
-df$Total <- gsub("\\.", "", df$Total) # Eliminar separadores de miles
-df$Total <- gsub(",", ".", df$Total) # Cambia los comas por puntos para que R los lea como decimales
-df$Total <- as.numeric(df$Total) # Transforma a tipo numérico
+summary(dem)
+glimpse(dem)
+vis_miss(dem)
 ```
 
 ```{r}
-df$Periodo <- as.Date(paste0(df$Periodo, "-01-01")) #Transformar a tipo fecha
+summary(eco)
+glimpse(eco)
+vis_miss(eco)
+
 ```
 
 
 ```{r}
-sapply(df, function(x) sum(is.na(x)))
-sapply(df, class)
+summary(soc)
+glimpse(soc)
+vis_miss(soc)
 ```
 
-Al modificar el tipo de la variable Total se aprecia un aumento del número de valores faltantes. Exploremos los posibles motivos.
+
+
 
 ```{r}
-df_ori <- read_delim("./data/Indicadores.csv", delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = "."), trim_ws = TRUE)
+sapply(dem, function(x) sum(is.na(x)))
+sapply(eco, function(x) sum(is.na(x)))
+sapply(soc, function(x) sum(is.na(x)))
+```
 
-na_diff <- which(!is.na(df_ori$Total) & is.na(df$Total))
+
+
+
+La variable Total del dataset social es de tipo character cuando debería ser numérica.
+
+```{r}
+soc$Total <- gsub("\\.", "", soc$Total) # Eliminar separadores de miles
+soc$Total <- gsub(",", ".", soc$Total) # Cambia los comas por puntos para que R los lea como decimales
+soc$Total <- as.numeric(soc$Total) # Transforma a tipo numérico
+```
+
+```{r}
+dem$Periodo <- as.Date(paste0(dem$Periodo, "-01-01")) #Transformar a tipo fecha
+eco$Periodo <- as.Date(paste0(eco$Periodo, "-01-01")) #Transformar a tipo fecha
+soc$Periodo <- as.Date(paste0(soc$Periodo, "-01-01")) #Transformar a tipo fecha
+
+```
+
+
+```{r}
+sapply(soc, class)
+```
+```{r}
+sapply(dem, function(x) sum(is.na(x)))
+sapply(eco, function(x) sum(is.na(x)))
+sapply(soc, function(x) sum(is.na(x)))
+```
+
+
+
+
+Al modificar el tipo de la variable Total se aprecia un aumento del número de valores faltantes. Exploremos los posibles motivos. 
+
+```{r}
+df_ori <- read_delim("./data/sociales.csv", delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = "."), trim_ws = TRUE)
+
+na_diff <- which(!is.na(df_ori$Total) & is.na(soc$Total))
 diff_observations <- df_ori[na_diff, , drop = FALSE]
 diff_observations
 ```
 
-Parece ser que, para algunos municipios, al no disponerse el valor del indicador se codifica como "..". (Consultar razón específica de esta codificación)
 
-
-
-Transformamos el dataset de manera que quede cada indicador como una variable nueva.
+Transformamos el dataset de manera que quede cada indicador como una variable nueva. Además, los datos faltantes en la variable Municipios son los valores asociados a Total Nacional. Por lo que se va a eliminar la columna Total Nacional y se van a rellenar los NA con el Valor "Total Nacional".
 
 ```{r}
-df1<- df %>% pivot_wider(names_from="Indicadores", values_from="Total") # Transformar el dataset más ancho (Variable por indicador)
+df1<- dem %>% pivot_wider(names_from="Indicadores", values_from="Total") %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
+df2<- eco %>% pivot_wider(names_from="Indicadores", values_from="Total") %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
+df3<- soc %>% pivot_wider(names_from="Indicadores", values_from="Total") %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
+
+```
+
+
+Se unen los 3 df
+```{r}
+df <- inner_join(df1, df2, by = c("Municipios", "Sexo", "Periodo")) %>% inner_join(., df3, by = c("Municipios", "Sexo", "Periodo"))
 ```
 
 
 ```{r}
-sapply(df1, class)
+sapply(df, function(x) sum(is.na(x)))/ dim(df)[1] *100
 ```
 
 
-
-
-```{r}
-sapply(df1, function(x) sum(is.na(x)))
-```
-
-Los datos faltantes en la variable Municipios son los valores asociados a Total Nacional. Por lo que se va a eliminar la columna Total Nacional y se van a rellenar los NA con el Valor "Total Nacional".
-
-```{r}
-df2 <- df1 %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
-sapply(df2, function(x) sum(is.na(x)))
-```
 
 
 Se eliminan las observaciones que tengan valores faltantes en todas las variables de los indicadores.
@@ -102,10 +142,10 @@ Se eliminan las observaciones que tengan valores faltantes en todas las variable
 
 
 ```{r}
-ind <- df2[,-c(1:3)]
+ind <- df[,-c(1:3)]
 missing_all <- which(rowSums(is.na(ind)) == ncol(ind))
-df3 <- df2[-missing_all,]
-sapply(df3, function(x) sum(is.na(x)))
+df3 <- df[-missing_all,]
+sapply(df3, function(x) sum(is.na(x)))/ dim(df)[1] *100
 ```
 
 
