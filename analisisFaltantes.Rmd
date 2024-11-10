@@ -1,0 +1,626 @@
+---
+title: "Análisis datos faltantes"
+author: "Alejandro Dionis-Ros"
+date: "2024-11-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+
+library("tidyverse")
+library(visdat)
+```
+
+# Cargamos los datos
+
+```{r}
+demograficos <- read_delim("data/demograficos.csv",
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
+economicos <- read_delim("data/economicos.csv",
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
+sociales <- read_delim("data/sociales.csv",
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+```
+
+# Datos demográficos
+
+Comprobamos los tipos de datos
+
+```{r}
+glimpse(demograficos)
+```
+
+Modificamos los tipos de las variables que lo necesiten
+
+```{r}
+demograficos <- demograficos %>%
+                  mutate(
+                    Sexo = as.factor(Sexo),
+                    Periodo = as.Date(paste0(Periodo, "-01-01")),
+                  )
+
+demograficos$Total <- gsub("\\.", "", demograficos$Total) # Eliminar separadores de miles
+demograficos$Total <- gsub(",", ".", demograficos$Total) # Cambia los comas por puntos para que R los lea como decimales
+demograficos$Total <- as.numeric(demograficos$Total) # Transforma a tipo numérico
+```
+
+Comprobamos la asignación de tipos
+
+```{r}
+glimpse(demograficos)
+```
+
+Comprobamos el número de valores faltantes en el dataset
+
+```{r}
+colSums(is.na(demograficos))
+vis_miss(demograficos)
+```
+
+Podemos observar que tanto la variable Municipios como la variable Total presenta valores faltantes. Comenzaremos a estudiar la variable Municipios.
+
+```{r}
+demograficos %>% distinct(Indicadores, Sexo, Periodo)
+```
+
+Parece ser que los valores faltantes de esta variable corresponden a los valores nacionales para cada uno de los indicadores. Por este motivo, eliminamos la variable Total Nacional y establecemos este valor en los Municipios faltantes, puesto que esta variable no añade información (Solo tiene un único valor "Total Nacional").
+
+```{r}
+unique(demograficos$'Total Nacional')
+
+demograficos <- demograficos %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
+```
+
+Tras imputar los valores faltantes de la variable Municipios solamente contamos con valores faltantes en la variable Total.
+
+```{r}
+colSums(is.na(demograficos))
+vis_miss(demograficos)
+```
+
+A continuación analizaremos la distribución de estos valores faltantes.
+
+Por Indicadores:
+
+```{r}
+demograficos %>% 
+  arrange(Indicadores) %>% 
+  vis_miss()
+
+demograficos %>% 
+  filter(is.na(Total)) %>%
+  count(Indicadores, sort = TRUE)
+
+demograficos %>% 
+  filter(is.na(Total)) %>%
+  count(Indicadores, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Indicadores, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "Conteo de Indicadores con Valores NA en Total",
+      x = "Indicadores",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
+```
+
+Podemos observar que hay varios Indicadores que tiene mayor número de valores faltantes.
+
+Por Sexo:
+
+```{r}
+demograficos %>% 
+  arrange(Sexo) %>% 
+  vis_miss()
+
+demograficos %>% 
+  filter(is.na(Total)) %>%
+  count(Sexo, sort = TRUE)
+
+demograficos %>% 
+  filter(is.na(Total)) %>%
+  count(Sexo, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Sexo, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "Conteo de Sexo con Valores NA en Total",
+      x = "Sexo",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
+```
+
+En cuanto a la variable Sexo, tanto hombres como mujeres cuentan con el mismo número de valores faltantes.
+
+Por Periodo:
+
+```{r}
+demograficos %>% 
+  arrange(Periodo) %>% 
+  vis_miss()
+
+demograficos %>% 
+  filter(is.na(Total)) %>%
+  count(Periodo, sort = TRUE)
+
+demograficos %>% 
+  filter(is.na(Total)) %>%
+  count(Periodo, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Periodo, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "Conteo de Periodo con Valores NA en Total",
+      x = "Periodo",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
+```
+
+En cuanto al Periodo, del año 2010 hasta el año 2017, son los años con mayor número de valores faltantes.
+
+Por Municipios:
+
+```{r}
+demograficos %>% 
+  arrange(Municipios) %>% 
+  vis_miss()
+
+demograficos %>% 
+  filter(is.na(Total)) %>%
+  count(Municipios, sort = TRUE)
+```
+
+En cuanto a la variable Municipios, podemos observar como hay ciertos municipios cuyo número de valores faltantes es mayor.
+
+
+```{r}
+length(unique(demograficos$Indicadores))
+
+# demograficos %>%
+#   filter(is.na(Total)) %>%
+#   distinct(Indicadores, Periodo) %>%
+#   count(Periodo) %>%
+#   arrange(desc(n)) %>%
+#   ggplot(aes(x = Periodo, y = n)) +
+#     geom_bar(stat = "identity")
+
+demograficos %>%
+  filter(is.na(Total)) %>%
+  distinct(Indicadores, Periodo, Sexo) %>%
+  count(Periodo, Sexo) %>%
+  arrange(desc(n)) %>%
+  ggplot(aes(x = Periodo, y = n, fill = Sexo)) +
+    geom_bar(stat = "identity", position = position_dodge()) + 
+    scale_fill_brewer(palette = "Paired")
+
+table(demograficos$Sexo)
+
+demograficos %>% 
+  filter(Sexo == "Hombres") %>% 
+  count(is.na(Total))
+
+demograficos %>% 
+  filter(Sexo == "Mujeres") %>% 
+  count(is.na(Total))
+
+demograficos %>% 
+  filter(Sexo == "Total") %>% 
+  count(is.na(Total))
+```
+
+
+
+
+
+# Datos económicos
+
+Comprobamos los tipos de datos
+
+```{r}
+glimpse(economicos)
+```
+
+Modificamos los tipos de las variables que lo necesiten
+
+```{r}
+economicos <- economicos %>%
+                  mutate(
+                    Sexo = as.factor(Sexo),
+                    Periodo = as.Date(paste0(Periodo, "-01-01")),
+                  )
+
+economicos$Total <- gsub("\\.", "", economicos$Total) # Eliminar separadores de miles
+economicos$Total <- gsub(",", ".", economicos$Total) # Cambia los comas por puntos para que R los lea como decimales
+economicos$Total <- as.numeric(economicos$Total) # Transforma a tipo numérico
+```
+
+Comprobamos la asignación de tipos
+
+```{r}
+glimpse(economicos)
+```
+
+Comprobamos el número de valores faltantes en el dataset
+
+```{r}
+colSums(is.na(economicos))
+vis_miss(economicos)
+```
+
+Podemos observar que tanto la variable Municipios como la variable Total presenta valores faltantes. Cabe recalcar además la gran cantidad de valores faltantes en esta variable (faltan el 73% de las observaciones)
+
+Comenzaremos a estudiar la variable Municipios.
+
+```{r}
+economicos %>% distinct(Indicadores, Sexo, Periodo)
+```
+
+Parece ser que los valores faltantes de esta variable corresponden a los valores nacionales para cada uno de los indicadores.
+
+Por este motivo, eliminamos la variable Total Nacional y establecemos este valor en los Municipios faltantes, puesto que esta variable no añade información (Solo tiene un único valor "Total Nacional").
+
+```{r}
+unique(economicos$'Total Nacional')
+
+economicos <- economicos %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
+```
+
+Tras imputar los valores faltantes de la variable Municipios solamente contamos con valores faltantes en la variable Total.
+
+```{r}
+colSums(is.na(economicos))
+vis_miss(economicos)
+```
+
+A continuación analizaremos la distribución de estos valores faltantes.
+
+Por Indicadores:
+
+```{r}
+economicos %>% 
+  arrange(Indicadores) %>% 
+  vis_miss()
+
+economicos %>% 
+  filter(is.na(Total)) %>%
+  count(Indicadores, sort = TRUE)
+
+economicos %>% 
+  filter(is.na(Total)) %>%
+  count(Indicadores, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Indicadores, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "Conteo de Indicadores con Valores NA en Total",
+      x = "Indicadores",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
+```
+
+Podemos observar que hay varios Indicadores que tiene mayor número de valores faltantes.
+
+Por Sexo:
+
+```{r}
+economicos %>% 
+  arrange(Sexo) %>% 
+  vis_miss()
+
+economicos %>% 
+  filter(is.na(Total)) %>%
+  count(Sexo, sort = TRUE)
+
+economicos %>% 
+  filter(is.na(Total)) %>%
+  count(Sexo, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Sexo, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "Conteo de Sexo con Valores NA en Total",
+      x = "Sexo",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
+```
+
+En cuanto a la variable Sexo, tanto hombres como mujeres cuentan con el mismo número de valores faltantes.
+
+Por Periodo:
+
+```{r}
+economicos %>% 
+  arrange(Periodo) %>% 
+  vis_miss()
+
+economicos %>% 
+  filter(is.na(Total)) %>%
+  count(Periodo, sort = TRUE)
+
+economicos %>% 
+  filter(is.na(Total)) %>%
+  count(Periodo, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Periodo, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "Conteo de Periodo con Valores NA en Total",
+      x = "Periodo",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
+```
+
+En cuanto al Periodo, el periodo del año 2010 hasta el año 2014 y el año 2023 son los años con mayor número de valores faltantes.
+
+Por Municipios:
+
+```{r}
+economicos %>% 
+  arrange(Municipios) %>% 
+  vis_miss()
+
+economicos %>% 
+  filter(is.na(Total)) %>%
+  count(Municipios, sort = TRUE)
+```
+
+En cuanto a la variable Municipios, podemos observar como hay ciertos municipios cuyo número de valores faltantes es mayor.
+
+
+
+Todos los valores vienen dados como "Total" para la variable Sexo (No hay separación)
+```{r}
+length(unique(economicos$Indicadores))
+
+# economicos %>%
+#   filter(is.na(Total)) %>%
+#   distinct(Indicadores, Periodo) %>%
+#   count(Periodo) %>%
+#   arrange(desc(n)) %>%
+#   ggplot(aes(x = Periodo, y = n)) +
+#     geom_bar(stat = "identity")
+
+economicos %>%
+  filter(is.na(Total)) %>%
+  distinct(Indicadores, Periodo, Sexo) %>%
+  count(Periodo, Sexo) %>%
+  arrange(desc(n)) %>%
+  ggplot(aes(x = Periodo, y = n, fill = Sexo)) +
+    geom_bar(stat = "identity", position = position_dodge()) + 
+    scale_fill_brewer(palette = "Paired")
+
+table(economicos$Sexo)
+
+economicos %>% 
+  filter(Sexo == "Hombres") %>% 
+  count(is.na(Total))
+
+economicos %>% 
+  filter(Sexo == "Mujeres") %>% 
+  count(is.na(Total))
+
+economicos %>% 
+  filter(Sexo == "Total") %>% 
+  count(is.na(Total))
+```
+
+
+
+
+
+
+
+
+
+# Datos sociales
+
+Comprobamos los tipos de datos
+
+```{r}
+glimpse(sociales)
+```
+
+Modificamos los tipos de las variables que lo necesiten
+
+```{r}
+sociales <- sociales %>%
+                  mutate(
+                    Sexo = as.factor(Sexo),
+                    Periodo = as.Date(paste0(Periodo, "-01-01")),
+                  )
+
+sociales$Total <- gsub("\\.", "", sociales$Total) # Eliminar separadores de miles
+sociales$Total <- gsub(",", ".", sociales$Total) # Cambia los comas por puntos para que R los lea como decimales
+sociales$Total <- as.numeric(sociales$Total) # Transforma a tipo numérico
+```
+
+Comprobamos la asignación de tipos
+
+```{r}
+glimpse(sociales)
+```
+
+Comprobamos el número de valores faltantes en el dataset
+
+```{r}
+colSums(is.na(sociales))
+vis_miss(sociales)
+```
+
+Podemos observar que tanto la variable Municipios como la variable Total presenta valores faltantes. Cabe recalcar la gran cantidad de valores faltantes en esta variable (faltan el 89% de las observaciones)
+
+Comenzaremos a estudiar la variable Municipios.
+
+```{r}
+sociales %>% distinct(Indicadores, Sexo, Periodo)
+```
+
+Parece ser que los valores faltantes de esta variable corresponden a los valores nacionales para cada uno de los indicadores.
+
+Por este motivo, eliminamos la variable Total Nacional y establecemos este valor en los Municipios faltantes, puesto que esta variable no añade información (Solo tiene un único valor "Total Nacional").
+
+```{r}
+unique(sociales$'Total Nacional')
+
+sociales <- sociales %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
+```
+
+Tras imputar los valores faltantes de la variable Municipios solamente contamos con valores faltantes en la variable Total.
+
+```{r}
+colSums(is.na(sociales))
+vis_miss(sociales)
+```
+
+A continuación analizaremos la distribución de estos valores faltantes.
+
+Por Indicadores:
+
+```{r}
+sociales %>% 
+  arrange(Indicadores) %>% 
+  vis_miss()
+
+sociales %>% 
+  filter(is.na(Total)) %>%
+  count(Indicadores, sort = TRUE)
+
+sociales %>% 
+  filter(is.na(Total)) %>%
+  count(Indicadores, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Indicadores, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "Conteo de Indicadores con Valores NA en Total",
+      x = "Indicadores",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
+```
+
+Podemos observar que hay varios Indicadores que tiene mayor número de valores faltantes.
+
+Por Sexo:
+
+```{r}
+sociales %>% 
+  arrange(Sexo) %>% 
+  vis_miss()
+
+sociales %>% 
+  filter(is.na(Total)) %>%
+  count(Sexo, sort = TRUE)
+
+sociales %>% 
+  filter(is.na(Total)) %>%
+  count(Sexo, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Sexo, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "Conteo de Sexo con Valores NA en Total",
+      x = "Sexo",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
+```
+
+En cuanto a la variable Sexo, tanto hombres como mujeres cuentan con el mismo número de valores faltantes.
+
+Por Periodo:
+
+```{r}
+sociales %>% 
+  arrange(Periodo) %>% 
+  vis_miss()
+
+sociales %>% 
+  filter(is.na(Total)) %>%
+  count(Periodo, sort = TRUE)
+
+sociales %>% 
+  filter(is.na(Total)) %>%
+  count(Periodo, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Periodo, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "Conteo de Periodo con Valores NA en Total",
+      x = "Periodo",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
+```
+
+En cuanto al Periodo, hay un elevado número de valores faltantes para prácticamente todos los años.
+
+Por Municipios:
+
+```{r}
+sociales %>% 
+  arrange(Municipios) %>% 
+  vis_miss()
+
+sociales %>% 
+  filter(is.na(Total)) %>%
+  count(Municipios, sort = TRUE)
+```
+
+En cuanto a la variable Municipios, podemos observar como hay ciertos municipios cuyo número de valores faltantes es mayor.
+
+```{r, fig.height=50, fig.width=20}
+sociales %>%
+  group_by(Indicadores, Sexo) %>%
+  summarise_all(~ mean(is.na(.)) * 100) %>%
+  # ungroup()
+  filter(Total == 100.0) %>%
+  pull(Sexo) %>%
+  unique()
+```
+
+Todos los valores vienen dados como "Total" para la variable Sexo (No hay separación)
+```{r}
+length(unique(sociales$Indicadores))
+
+# sociales %>%
+#   filter(is.na(Total)) %>%
+#   distinct(Indicadores, Periodo) %>%
+#   count(Periodo) %>%
+#   arrange(desc(n)) %>%
+#   ggplot(aes(x = Periodo, y = n)) +
+#     geom_bar(stat = "identity")
+
+sociales %>%
+  filter(is.na(Total)) %>%
+  distinct(Indicadores, Periodo, Sexo) %>%
+  count(Periodo, Sexo) %>%
+  arrange(desc(n)) %>%
+  ggplot(aes(x = Periodo, y = n, fill = Sexo)) +
+    geom_bar(stat = "identity", position = position_dodge()) + 
+    scale_fill_brewer(palette = "Paired")
+
+table(sociales$Sexo)
+
+sociales %>% 
+  filter(Sexo == "Hombres") %>% 
+  count(is.na(Total))
+
+sociales %>% 
+  filter(Sexo == "Mujeres") %>% 
+  count(is.na(Total))
+
+sociales %>% 
+  filter(Sexo == "Total") %>% 
+  count(is.na(Total))
+```
