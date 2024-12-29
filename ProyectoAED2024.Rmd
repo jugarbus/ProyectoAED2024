@@ -76,240 +76,221 @@ output:
     extra_dependencies: longtable
 ---
 
-# Introduction
 
-The introduction should briefly place the study in a broad context and highlight
-why it is important. It should define the purpose of the work and its
-significance. The current state of the research field should be reviewed
-carefully and key publications cited. Please highlight controversial and
-diverging hypotheses when necessary. Finally, briefly mention the main aim of
-the work and highlight the principal conclusions. As far as possible, please
-keep the introduction comprehensible to scientists outside your particular
-field of research. Citing a journal paper [@bertrand-krajewski_distribution_1998;
-@leutnant_stormwater_2016]. And now citing a book reference @gujer_systems_2008.
-Some MDPI journals use Chicago and others use APA, this template should choose
-the correct citation format for you once you specify the journal in the YAML
-header.
-
-
-
-
-# Materials and Methods
-
-Materials and Methods should be described with sufficient details to allow 
-others to replicate and build on published results. Please note that publication 
-of your manuscript implicates that you must make all materials, data, computer 
-code, and protocols associated with the publication available to readers. Please
-disclose at the submission stage any restrictions on the availability of 
-materials or information. New methods and protocols should be described in 
-detail while well-established methods can be briefly described and appropriately
-cited.
-
-Research manuscripts reporting large datasets that are deposited in a publicly 
-available database should specify where the data have been deposited and provide
-the relevant accession numbers. If the accession numbers have not yet been
-obtained at the time of submission, please state that they will be provided
-during review. They must be provided prior to publication.
-
-Interventionary studies involving animals or humans, and other studies require
-ethical approval must list the authority that provided approval and the
-corresponding ethical approval code.
-
-# Results
-
-This section may be divided by subheadings. It should provide a concise and
-precise description of the experimental results, their interpretation as well
-as the experimental conclusions that can be drawn.
-
-
-
-# Conclusion
-
-This section is not mandatory, but can be added to the manuscript if the
-discussion is unusually long or complex.
-
-
-# Como utilizar la plantilla
-
-## Notas de pie de página
-
-To use endnotes, change `endnotes: true` in the YAML header, then use
-`\endnote{This is an endnote.}`.
-
-## Código en el texto:
-
-Una forma 
-
-```yaml
-title: Title of the paper
-author:
-  - name: first and last name
-    affil: |
-      One or more comma seperated numbers corresponding to affilitation
-      and one or more  comma seperated symbols corresponding 
-      optional notes.
-    orcid: optional orcid number
-affiliation:  
-  - num: 1,..., n for each affiliation
-    address: required
-    email: required
-authorcitation: |
-  Lastname, F.
-```
-Otra forma de insertar código:
-
-The `status` variable should generally not be changed by authors. The `type` variable describes the type of of submission and defaults to `article` but
-
-Mostrar los chunks:
-
-```{r mdpitype, echo = TRUE}
-type <- c("abstract, addendum, article, book, bookreview, briefreport, 
-casereport, comment, commentary, communication, conferenceproceedings, 
-correction, conferencereport, entry, expressionofconcern, extendedabstract, 
-datadescriptor, editorial, essay, erratum, hypothesis, interestingimage, 
-obituary, opinion, projectreport, reply, retraction, review, perspective, 
-protocol, shortnote, studyprotocol, systematicreview, supfile, 
-technicalnote, viewpoint, guidelines, registeredreport, tutorial")
-knitr::kable(rticles::string_to_table(type, 3), 
-             col.names = NULL, format = "latex", booktab = TRUE, 
-             caption = "MDPI article types.")
-```
-
-## Tablas
-
-Se citan con el orden en el que aparece el código, no el texto
-
-Table \ref{tab:mdpinames}.  can be replaced with any of the ones in Table \ref{tab:mdpitype}
-
-
-## Salto de página a una página con orientación horizontal
-
-\startlandscape
-```{r, mdpinames, echo=FALSE, results='asis'}
-mdpi_journals <- "acoustics, actuators, addictions, admsci, adolescents, aerobiology, aerospace, agriculture, agriengineering, agrochemicals, agronomy, ai, air, algorithms, allergies, alloys, analytica, analytics, anatomia, animals, antibiotics, antibodies, antioxidants, applbiosci, appliedchem, appliedmath, applmech, applmicrobiol, applnano, applsci, aquacj, architecture, tomography, tourismhosp, toxics, toxins, transplantology, transportation, traumacare, traumas, tropicalmed, universe, urbansci, uro, vaccines, vehicles, venereology, vetsci, vibration, virtualworlds, viruses, vision, waste, water, wem, wevj, wind, women, world, youth, zoonoticdis"
-
-knitr::kable(rticles::string_to_table(mdpi_journals, 8),
-             col.names = NULL,
-             format = "latex",
-             booktabs = TRUE, 
-             caption = "MDPI journal names.",
-             longtable = TRUE)
-
-```
-\finishlandscape
-
-## Listas
-
-Bulleted lists look like this:
-
-* First bullet
-* Second bullet
-* Third bullet
-
-Numbered lists can be added as follows:
-
-1. First item
-2. Second item
-3. Third item
-
-The text continues here.
-
-## Figures, Tables and Schemes
-
-All figures and tables should be cited in the main text as Figure \ref{fig:fig1}, 
-\ref{tab:tab1}, etc. To get cross-reference to figure generated by R chunks 
-include the `\\label{}` tag in the `fig.cap` attribute of the R chunk: 
-`fig.cap = "Fancy Caption\\label{fig:plot}"`.
-
-```{r fig1, echo=FALSE, fig.width=3, fig.cap="A figure added with a code chunk.\\label{fig:fig1}"}
-x = rnorm(10)
-y = rnorm(10)
-plot(x, y)
-```
-
-
-When making tables using `kable`, it is suggested to use
-the `format="latex"` and `tabl.envir="table"` arguments
-to ensure table numbering and compatibility with the mdpi
-document class.
-
-```{r tab1, echo=FALSE}
-knitr::kable(mtcars[1:5, 1:3], format = "latex", 
-             booktabs = TRUE, 
-             caption = "This is a table caption. Tables should be placed in the 
-             main text near to the first time they are~cited.", 
-             align = 'ccc', centering = FALSE,
-             table.envir = "table", position = "H")
+```{r setup, include=FALSE, fig.align='left'}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, out.width = '70%')
 ```
 
 
 
-For a very wide table, landscape layouts are allowed.
+# Introducción
+
+Hablar de los 3 datasets y de donde se han obtenido. BLABLABLA
 
 
-\startlandscape
 
-```{r tab2, echo=FALSE}
-df <- data.frame(`Title 1` = c("Entry 1", "Entry 2"),
-                 `Title 2` = c("Data", "Data"),
-                 `Title 3` = c("Data", "Data"),
-                 `Title 4` = c("This cell has some longer content that runs over
-                               two lines",
-                               "Data"))
-knitr::kable(df, format = "latex", 
-             booktabs = TRUE, 
-             caption = "This is a very wide table", 
-             align = 'ccc', centering = FALSE,
-             table.envir = "table", position = "H")
+# Objetivos
+
+
+
+# Análisis exploratorio de los datos
+
+
+
+## Importación de los datos
+
+```{r, include=FALSE}
+rm(list = ls())
+pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
 ```
 
-\finishlandscape
 
-## Formatting of Mathematical Components
-
-This is an example of an equation:
-
-$$
-a = 1.
-$$
-
-If you want numbered equations use Latex and wrap in the equation environment:
-
-\begin{equation}
-a = 1,
-\end{equation}
-
-the text following an equation need not be a new paragraph. Please punctuate 
-equations as regular text.
-
-```{comment}
-If the documentclass option "submit" is chosen, please insert a blank line before and after any math environment (equation and eqnarray environments). This ensures correct linenumbering. The blank line should be removed when the documentclass option is changed to "accept" because the text following an equation should not be a new paragraph.
+```{r, include=FALSE}
+getOption("encoding")
+guess_encoding("./data/demograficos.csv")
+guess_encoding("./data/economicos.csv")
+guess_encoding("./data/sociales.csv")
+#El encoding es de UTF-8
 ```
 
-This is the example 2 of equation:
 
-\begin{adjustwidth}{-\extralength}{0cm}
-\begin{equation}
-a = b + c + d + e + f + g + h + i + j + k + l + m + n + o + p + q + r + s + t + 
-u + v + w + x + y + z
-\end{equation}
-\end{adjustwidth}
+```{r, include=FALSE}
+dem <- read_delim("./data/demograficos.csv", delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = "."), trim_ws = TRUE, show_col_types = FALSE)
 
-Theorem-type environments (including propositions, lemmas, corollaries etc.) 
-can be formatted as follows:
+eco <- read_delim("./data/economicos.csv", delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = "."), trim_ws = TRUE, show_col_types = FALSE)
 
-Example of a theorem:
+soc <- read_delim("./data/sociales.csv", delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = "."), trim_ws = TRUE, show_col_types = FALSE)
+```
 
-::: {.Theorem latex=true}
-Example text of a theorem
-:::
 
-The text continues here. Proofs must be formatted as follows:
 
-Example of a proof:
 
-::: {.proof latex="[Proof of Theorem1]"}
-Text of the proof. Note that the phrase ``of Theorem 1'' is optional if it is 
-clear which theorem is being referred to.
-:::
+```{r, include=FALSE}
+#La variable Total del dataset social es de tipo character cuando debería ser numérica.
+soc <- soc %>%
+  mutate(Total = str_replace_all(Total, "\\.", "")) %>%  # Eliminar separadores de miles
+  mutate(Total = str_replace_all(Total, ",", ".")) %>%   # Cambiar comas por puntos
+  mutate(Total = as.numeric(Total))                      # Transformar a tipo numérico
+```
 
+
+```{r, include=FALSE}
+#Al modificar el tipo de la variable Total se aprecia un aumento del número de valores faltantes. Exploremos los posibles motivos. 
+
+df_ori <- read_delim("./data/sociales.csv", delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", grouping_mark = "."), trim_ws = TRUE)
+
+na_diff <- which(!is.na(df_ori$Total) & is.na(soc$Total))
+diff_observations <- df_ori[na_diff, , drop = FALSE]
+diff_observations
+
+# Hay 1461 observaciones en el dataframe social con un valor de ".." en la variable Total
+```
+
+
+
+```{r, include=FALSE}
+# Transformar variable Periodo a tipo fecha y extraer solo el año
+
+dem <- dem %>%
+  mutate(Periodo = year(ymd(paste0(Periodo, "-01-01"))))
+
+eco <- eco %>%
+  mutate(Periodo = year(ymd(paste0(Periodo, "-01-01"))))
+
+soc <- soc %>%
+  mutate(Periodo = year(ymd(paste0(Periodo, "-01-01"))))
+```
+
+
+
+```{r, include=FALSE}
+# Los datos faltantes en la variable Municipios son los valores asociados a Total Nacional. Por lo que se va a eliminar la columna Total Nacional y se van a rellenar los NA con el Valor "Total Nacional".
+
+dem_2<- dem %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
+eco_2<- eco %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
+soc_2<- soc %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
+
+```
+
+
+
+```{r, include=FALSE}
+# Se concatenan los 3 datasets ya que tienen formato tidy y no hay coincidencias en la variable 'Indicadores', que es común a todos los dataframes.
+full_df <- bind_rows(dem_2, eco_2, soc_2)
+```
+
+
+
+
+```{r, include=FALSE}
+# Datos Totales Nacionales (Sexo=Total)
+total_df <- full_df %>% filter(Municipios=='Total Nacional') %>% filter(Sexo=='Total') %>% select(-Sexo)
+
+# Datos Totales Nacionales por sexo
+total_bysex_df <- full_df %>% filter(Municipios=='Total Nacional') %>% filter(Sexo!='Total') 
+
+
+# Datos por municipios (Sexo=Total)
+mun_df <- full_df %>% filter(Municipios!='Total Nacional') %>% filter(Sexo=='Total') %>% select(-Sexo)
+
+# Datos por municipios y sexo
+mun_bysex_df <- full_df %>% filter(Municipios!='Total Nacional') %>% filter(Sexo!='Total') 
+```
+
+
+
+```{r, include=FALSE}
+# Formato ancho de los dataframes
+wide_full_df <- full_df %>% pivot_wider(names_from="Indicadores", values_from="Total")
+
+wide_total_df <- total_df %>% pivot_wider(names_from="Indicadores",
+                                          values_from="Total")
+
+wide_total_bysex_df <- total_bysex_df %>% pivot_wider(names_from="Indicadores",
+                                          values_from="Total")
+
+wide_mun_df <- mun_df %>% pivot_wider(names_from="Indicadores", values_from="Total")
+
+wide_mun_bysex_df <- mun_bysex_df %>% pivot_wider(names_from="Indicadores", values_from="Total")
+```
+
+
+Antes de importar el dataset, primero se verificó que la codificación de los tres datasets fuera la misma, confirmando que todos estaban en formato UTF-8. Una vez comprobado, a la hora de importar los datasets, fue necesario establecer el delimitador de campos con el punto y coma (;) y adaptar el formato reginal al de R, ya que en los datasets el decimal_mark es la coma (,) y el grouping_mark es el punto (.). Las variables a estudiar, las cuales son coincidentes en los tres datasets, son:
+
+
+- *Total Nacional* : Variable redundante con un único valor "Total Nacional", que toma verdadero valor cuando el atributo *Municipios* es vacío. 
+
+- *Municipios* : Ciudad de la que se han obtenido los datos.
+
+- *Indicadores* : Tipo de estadístico demográfico, económico o social que se está calculando en cada observación (se comentarán mas a fondo después del análisis de datos faltantes).
+
+- *Sexo* : Sexo del cual se está obteniendo el indicador estadístico (hombre o mujer).
+
+- *Periodo* : Año al que hace referencia el indicador estadístico.
+
+
+- *Total* : Valor numérico asociado al indicador estadístico, que puede ser un valor absoluto, una tasa o un porcentaje, dependiendo del tipo de estadístico.
+
+
+
+Otras consideraciones a tener en cuenta son que la variable *Total* del dataset social era de tipo character y se transformó a tipo numeric para poder realizar operaciones. Esto se debe a que esta columna contenía valores "..", que serán considerados como faltantes en nuestro análisis. Al importar estos valores, R determinó que la clase de esta variable era de tipo character.
+
+Además, se transformó la variable *Periodo* a tipo Date.
+
+
+Posteriormente se concatenaron los tres datasets ya que tienen formato tidy y no hay niveles coincidentes (todos son únicos) en la columna *Indicadores*, que es común a todos los dataframes.
+
+
+
+Finalmente, el dataset se separó en varias partes:
+
+- Datos totales nacionales con *Sexo* = Total.
+
+- Datos totales nacionales por sexo.
+
+- Datos por municipios con *Sexo* = Total.
+
+- Datos por municipios y sexo.
+
+
+
+Esto se hizo porque no tiene sentido estudiar los datos de forma conjunta, ya que muchos de los indicadores tienen distintas escalas. No obstante, también se ha guardado el dataset completo por si es necesario trabajar con él en algún momento.
+
+
+
+
+## Análisis de datos faltantes y especiales
+
+
+
+
+Los datos faltantes en la variable Municipios son los valores asociados a Total Nacional. Por lo que se va a eliminar la columna Total Nacional y se van a rellenar los NA con el Valor "Total Nacional".
+
+Al modificar el tipo de la variable Total se aprecia un aumento del número de valores faltantes. Exploremos los posibles motivos. Debido a que Hay 1461 observaciones en el dataframe social con un valor de ".." en la variable Total
+
+
+
+```{r, include=FALSE}
+# Comprobar filas duplicadas
+duplicated_rows <- full_df %>%
+  filter(duplicated(full_df))
+
+# Ver las filas duplicadas
+print(duplicated_rows)
+```
+
+
+```{r, include=FALSE}
+```
+
+
+```{r, include=FALSE}
+```
+
+
+```{r, include=FALSE}
+```
+
+
+```{r, include=FALSE}
+```
