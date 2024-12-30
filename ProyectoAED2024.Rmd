@@ -247,7 +247,7 @@ Esto se hizo porque no tenía sentido estudiar los datos de forma conjunta, ya q
 
 
 
-## Análisis de datos faltantes y especiales
+## Análisis de datos faltantes
 
 
 ```{r, include=FALSE}
@@ -468,4 +468,9 @@ final_data_clean <- clean_mun_df %>%
 Para asegurar la consistencia de los datos, se realizó una imputación de los valores faltantes en la columna *Total.* Primero, se calcularon tanto la media como la mediana de *Total* para cada grupo de Indicadores. Luego, se compararon estas dos medidas y se observó que, en ciertos indicadores, la diferencia entre la media y la mediana era significativa. Debido a estas discrepancias, se decidió utilizar la mediana para la imputación, ya que es menos sensible a los valores atípicos. Finalmente, se imputaron los valores faltantes en la columna *Total* con la mediana correspondiente a cada grupo de Indicadores, asegurando así una representación más robusta y precisa de los datos.
 
 
+## Análisis univariante
 
+
+
+
+## Análisis bivariante
