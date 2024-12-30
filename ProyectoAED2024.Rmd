@@ -279,6 +279,7 @@ Es importante señalar que durante la importación de los datasets, se eliminaro
 
 También se observó que al modificar el tipo de la variable *Total* se apreció un aumento del número de valores faltantes.  Esto se debió a que había 1461 observaciones en el dataframe social con un valor de ".." en la variable *Total* que al transformarlos a numéricos, R los asoció a valores NA.
 
+Además, no se encontraron observaciones duplicadas a lo largo del dataset completo.
 
 A continuación se van a estudiar estos NAs en función del resto variables categóricas.
 
@@ -287,45 +288,46 @@ A continuación se van a estudiar estos NAs en función del resto variables cate
 
 
 ```{r}
-# Filtramos los valores NA en la columna Total y contamos por Sexo
-na_counts <- full_df %>%
+full_df %>% 
+  filter(is.na(Total)) %>%
+  count(Sexo, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Sexo, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "Conteo de Sexo con Valores NA en Total",
+      x = "Sexo",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
+```
+
+```{r}
+n_na_sex <- full_df %>% 
   filter(is.na(Total)) %>%
   count(Sexo, sort = TRUE)
 
-# Calculamos el porcentaje de NA para cada Sexo
-na_counts <- na_counts %>%
-  mutate(percentage = n / sum(n) * 100)
+total_sex <- full_df %>% 
+  count(Sexo, sort = TRUE)
 
-# Creamos el gráfico con ggplot2
-ggplot(na_counts, aes(x = reorder(Sexo, n), y = n)) +
-  geom_bar(stat = "identity", fill = "skyblue") +
-  geom_text(aes(label = paste0(round(percentage, 1), "%")), vjust = -0.5) +  # Añadimos etiquetas de porcentaje
-  coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
-  labs(
-    title = "Conteo de Sexo con Valores NA en Total",
-    x = "Sexo",
-    y = "Cantidad de NA"
-  ) +
-  theme_minimal()
+n_na_sex$perc <- n_na_sex$n / total_sex$n * 100
+n_na_sex$perc_total <- n_na_sex$n / dim(full_df)[1] * 100
+
+
+
+n_na_sex
+
 ```
 
 
 
 
-Los porcentajes que se muestran en el gráfico indican la proporción de valores faltantes en la columna *Total* para cada categoría de Sexo (Mujeres y Hombres) en relación con el total de valores NA en esa columna. Por lo que se puede observar, el 80.4% de todos los valores NA en la columna *Total* corresponden a la categoría Mujeres u Hombres. Por tanto, no tiene sentido trabajar con obervaciones de hombres y mujeres y se decidió trabajar únicamente con el total en cuanto al sexo y por municipios (no se tiene en cuenta Total Nacional ya que es redundante y se puede obtener sumando el de municipios).
+Tanto para Hombres como para Mujeres, aproximadamente el 85.91% de sus observaciones tienen valores faltantes en la columna Total, lo que representa el 28.64% del total de observaciones en el dataframe. Para la categoría Total, el 41.97% de sus observaciones tienen valores faltantes, representando el 13.99% del total de observaciones en el dataframe. Por tanto, no tiene sentido incluir en el análisis obervaciones de hombres y mujeres por separado y se decidió trabajar únicamente con el total y por municipios (no se tiene en cuenta Total Nacional ya que es redundante y se puede obtener sumando el de municipios).
 
 
 ```{r}
 # (mun_df) Ahora solo se va a usar el dataset Sexo=Total y por municipios (no se tiene en cuenta Total Nacional ya que es redundante y se puede obtener sumando el de municipios)
 ```
-
-
-```{r}
-colSums(is.na(mun_df)) / dim(mun_df)[1] *100
-```
-
-
-Se observa una mejora del porcentaje de datos faltantes total al prescindir de esta variable.
 
 
 ### Por indicadores
@@ -338,15 +340,15 @@ mun_df %>%
     geom_bar(stat = "identity", fill = "skyblue") +
     coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
     labs(
-      title = "Conteo NA por Indicadores",
+      title = "Conteo NAs",
       x = "Indicadores",
-      y = "Cantidad de NA"
+      y = "Cantidad de NAs"
     ) +
     theme_minimal()
 ```
 
 
-Como se observa en la gráfica superior, la distribución de los NAs por cada indicador no es uniforme. Por tanto, como criterio se van a prescindir de los que superen el 75% de valores faltantes relativo al total de observaciones para cada indicador. Con este criterio se descartarían los 13 indicadores con mas NAs que se pueden visualizar en la gráfica superior. Estos indicadores corresponden la mayoría al dataset económico.
+Como se observa en la gráfica superior, la distribución de los NAs por cada indicador no es uniforme. Por tanto, como criterio, se van a prescindir de los que superen el 75% de valores faltantes relativo al total de observaciones para cada indicador. Con este criterio se descartarían los 13 indicadores con mas NAs que se pueden visualizar en la gráfica superior. Estos indicadores corresponden la mayoría al dataset económico.
 
 
 ```{r, include=FALSE}
@@ -367,20 +369,6 @@ na_ind_list
 # Eliminamos los indicadores que tengan más de 75% de valores faltantes
 clean_mun_df <- mun_df %>% 
   filter(Indicadores %in% na_ind_list$Indicadores)
-
-
-clean_mun_df %>%
-  filter(is.na(Total)) %>%
-  count(Indicadores, sort = TRUE) %>%
-  ggplot(aes(x = reorder(Indicadores, n), y = n)) +
-    geom_bar(stat = "identity", fill = "skyblue") +
-    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
-    labs(
-      title = "Conteo de Indicadores con Valores NA en Total",
-      x = "Indicadores",
-      y = "Cantidad de NA"
-    ) +
-    theme_minimal()
 ```
 
 
@@ -396,22 +384,17 @@ clean_mun_df %>%
 ```{r}
 clean_mun_df %>% 
   filter(is.na(Total)) %>%
-  count(Periodo, sort = TRUE)
-
-clean_mun_df %>% 
-  filter(is.na(Total)) %>%
   count(Periodo, sort = TRUE) %>%
   ggplot(aes(x = reorder(Periodo, n), y = n)) +
     geom_bar(stat = "identity", fill = "skyblue") +
     coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
     labs(
-      title = "Conteo de Periodo con Valores NA en Total",
+      title = "Conteo de Periodo con Valores NAs en Total",
       x = "Periodo",
-      y = "Cantidad de NA"
+      y = "Cantidad de NAs"
     ) +
     theme_minimal()
 ```
-
 
 
 ```{r}
@@ -423,16 +406,66 @@ total_period <- clean_mun_df %>%
   count(Periodo, sort = TRUE)
 
 n_na_period$perc <- n_na_period$n / total_period$n * 100
+n_na_period$perc_total <- n_na_period$n / dim(clean_mun_df)[1] * 100
+
+
 
 n_na_period
 
 ```
 
 
+
+
+El periodo del año 2010 hasta el año 2014 y el año 2023 son los años con mayor número de valores faltantes. No obstante, como representan menos de un 2% de faltantes del total de observaciones, estos valores van a ser imputados.
+
+
+
+
+Se observa una mejora de valores faltantes (11.36%) al prescindir de la variable Sexo y de los indicadores con mayor proporción de NAs:
+
 ```{r}
 colSums(is.na(clean_mun_df)) / dim(clean_mun_df)[1] *100
 ```
 
+Aun así, estos valores van a ser imputados mediante una medida de tendencia central, dependiendo del indicador al que esté asociada cada observación.
 
-No se encontraron observaciones duplicadas.
+
+### Imputación
+
+
+
+```{r}
+# Ajustar las opciones para mostrar números en notación decimal
+options(scipen = 999)
+
+
+medianas <- clean_mun_df %>%
+  group_by(Indicadores) %>%
+  summarise(mediana_total = median(Total, na.rm = TRUE))
+
+medias <- clean_mun_df %>%
+  group_by(Indicadores) %>%
+  summarise(media_total = mean(Total, na.rm = TRUE))
+
+diff <- abs(medianas[,2] - medias[,2])
+
+# Como en ciertos indicadores difiere mucho la mediana de la media se imputa con la mediana
+
+```
+
+
+
+
+```{r}
+final_data_clean <- clean_mun_df %>%
+  left_join(medianas, by = "Indicadores") %>%
+  mutate(Total = ifelse(is.na(Total), mediana_total, Total)) %>%
+  select(-mediana_total)  # Eliminar la columna de medianas después de la imputación
+
+```
+
+Para asegurar la consistencia de los datos, se realizó una imputación de los valores faltantes en la columna *Total.* Primero, se calcularon tanto la media como la mediana de *Total* para cada grupo de Indicadores. Luego, se compararon estas dos medidas y se observó que, en ciertos indicadores, la diferencia entre la media y la mediana era significativa. Debido a estas discrepancias, se decidió utilizar la mediana para la imputación, ya que es menos sensible a los valores atípicos. Finalmente, se imputaron los valores faltantes en la columna *Total* con la mediana correspondiente a cada grupo de Indicadores, asegurando así una representación más robusta y precisa de los datos.
+
+
 
