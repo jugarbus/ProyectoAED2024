@@ -458,7 +458,7 @@ diff <- abs(medianas[,2] - medias[,2])
 
 
 ```{r}
-final_data_clean <- clean_mun_df %>%
+data <- clean_mun_df %>%
   left_join(medianas, by = "Indicadores") %>%
   mutate(Total = ifelse(is.na(Total), mediana_total, Total)) %>%
   select(-mediana_total)  # Eliminar la columna de medianas después de la imputación
@@ -466,6 +466,8 @@ final_data_clean <- clean_mun_df %>%
 ```
 
 Para asegurar la consistencia de los datos, se realizó una imputación de los valores faltantes en la columna *Total.* Primero, se calcularon tanto la media como la mediana de *Total* para cada grupo de Indicadores. Luego, se compararon estas dos medidas y se observó que, en ciertos indicadores, la diferencia entre la media y la mediana era significativa. Debido a estas discrepancias, se decidió utilizar la mediana para la imputación, ya que es menos sensible a los valores atípicos. Finalmente, se imputaron los valores faltantes en la columna *Total* con la mediana correspondiente a cada grupo de Indicadores, asegurando así una representación más robusta y precisa de los datos.
+
+
 
 
 ## Análisis univariante
