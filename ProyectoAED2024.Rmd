@@ -101,7 +101,7 @@ Hablar de los 3 datasets y de donde se han obtenido. BLABLABLA
 
 ```{r, include=FALSE}
 rm(list = ls())
-pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
+pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate, visdat) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
 ```
 
 
@@ -152,13 +152,13 @@ diff_observations
 # Transformar variable Periodo a tipo fecha y extraer solo el año
 
 dem <- dem %>%
-  mutate(Periodo = year(ymd(paste0(Periodo, "-01-01"))))
+  mutate(Periodo = ymd(paste0(Periodo, "-01-01")))
 
 eco <- eco %>%
-  mutate(Periodo = year(ymd(paste0(Periodo, "-01-01"))))
+  mutate(Periodo = ymd(paste0(Periodo, "-01-01")))
 
 soc <- soc %>%
-  mutate(Periodo = year(ymd(paste0(Periodo, "-01-01"))))
+  mutate(Periodo = ymd(paste0(Periodo, "-01-01")))
 ```
 
 
@@ -166,12 +166,22 @@ soc <- soc %>%
 ```{r, include=FALSE}
 # Los datos faltantes en la variable Municipios son los valores asociados a Total Nacional. Por lo que se va a eliminar la columna Total Nacional y se van a rellenar los NA con el Valor "Total Nacional".
 
-dem_2<- dem %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
-eco_2<- eco %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
-soc_2<- soc %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional")
-
+dem_2<- dem %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional") %>%  mutate(
+                    Sexo = as.factor(Sexo))
+eco_2<- eco %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional") %>%  mutate(
+                    Sexo = as.factor(Sexo))
+soc_2<- soc %>% replace_na(list(Municipios = "Total Nacional")) %>% select(-"Total Nacional") %>%  mutate(
+                    Sexo = as.factor(Sexo))
 ```
 
+
+
+```{r, include=FALSE}
+#Ordenados por fechas
+DEM <- dem_2 %>% arrange(Periodo)
+ECO <- eco_2 %>% arrange(Periodo)
+SOC <- soc_2 %>% arrange(Periodo)
+```
 
 
 ```{r, include=FALSE}
@@ -187,32 +197,17 @@ full_df <- bind_rows(dem_2, eco_2, soc_2)
 total_df <- full_df %>% filter(Municipios=='Total Nacional') %>% filter(Sexo=='Total') %>% select(-Sexo)
 
 # Datos Totales Nacionales por sexo
-total_bysex_df <- full_df %>% filter(Municipios=='Total Nacional') %>% filter(Sexo!='Total') 
+total_bysex_df <- full_df %>% filter(Municipios=='Total Nacional') %>% filter(Sexo!='Total')
 
 
 # Datos por municipios (Sexo=Total)
-mun_df <- full_df %>% filter(Municipios!='Total Nacional') %>% filter(Sexo=='Total') %>% select(-Sexo)
+mun_df <- full_df %>% filter(Municipios!='Total Nacional') %>% filter(Sexo=='Total') %>% select(-Sexo) 
 
 # Datos por municipios y sexo
-mun_bysex_df <- full_df %>% filter(Municipios!='Total Nacional') %>% filter(Sexo!='Total') 
+mun_bysex_df <- full_df %>% filter(Municipios!='Total Nacional') %>% filter(Sexo!='Total')
 ```
 
 
-
-```{r, include=FALSE}
-# Formato ancho de los dataframes
-wide_full_df <- full_df %>% pivot_wider(names_from="Indicadores", values_from="Total")
-
-wide_total_df <- total_df %>% pivot_wider(names_from="Indicadores",
-                                          values_from="Total")
-
-wide_total_bysex_df <- total_bysex_df %>% pivot_wider(names_from="Indicadores",
-                                          values_from="Total")
-
-wide_mun_df <- mun_df %>% pivot_wider(names_from="Indicadores", values_from="Total")
-
-wide_mun_bysex_df <- mun_bysex_df %>% pivot_wider(names_from="Indicadores", values_from="Total")
-```
 
 
 Antes de importar el dataset, primero se verificó que la codificación de los tres datasets fuera la misma, confirmando que todos estaban en formato UTF-8. Una vez comprobado, a la hora de importar los datasets, fue necesario establecer el delimitador de campos con el punto y coma (;) y adaptar el formato reginal al de R, ya que en los datasets el decimal_mark es la coma (,) y el grouping_mark es el punto (.). Las variables a estudiar, las cuales son coincidentes en los tres datasets, son:
@@ -235,7 +230,7 @@ Antes de importar el dataset, primero se verificó que la codificación de los t
 
 Otras consideraciones a tener en cuenta son que la variable *Total* del dataset social era de tipo character y se transformó a tipo numeric para poder realizar operaciones. Esto se debe a que esta columna contenía valores "..", que serán considerados como faltantes en nuestro análisis. Al importar estos valores, R determinó que la clase de esta variable era de tipo character.
 
-Además, se transformó la variable *Periodo* a tipo Date.
+Además, se transformó la variable *Periodo* a tipo Date y la variable *Sexo* a tipo factor.
 
 
 Posteriormente se concatenaron los tres datasets ya que tienen formato tidy y no hay niveles coincidentes (todos son únicos) en la columna *Indicadores*, que es común a todos los dataframes.
@@ -254,20 +249,12 @@ Finalmente, el dataset se separó en varias partes:
 
 
 
-Esto se hizo porque no tiene sentido estudiar los datos de forma conjunta, ya que muchos de los indicadores tienen distintas escalas. No obstante, también se ha guardado el dataset completo por si es necesario trabajar con él en algún momento.
+Esto se hizo porque no tiene sentido estudiar los datos de forma conjunta, ya que muchos de los indicadores tienen distintas escalas. No obstante, también se ha guardado el dataset completo por si es necesario trabajar con él en algún momento. 
 
 
 
 
 ## Análisis de datos faltantes y especiales
-
-
-
-
-Los datos faltantes en la variable Municipios son los valores asociados a Total Nacional. Por lo que se va a eliminar la columna Total Nacional y se van a rellenar los NA con el Valor "Total Nacional".
-
-Al modificar el tipo de la variable Total se aprecia un aumento del número de valores faltantes. Exploremos los posibles motivos. Debido a que Hay 1461 observaciones en el dataframe social con un valor de ".." en la variable Total
-
 
 
 ```{r, include=FALSE}
@@ -277,20 +264,131 @@ duplicated_rows <- full_df %>%
 
 # Ver las filas duplicadas
 print(duplicated_rows)
+
+#No hay duplicados
 ```
 
 
-```{r, include=FALSE}
+
+En esta sección 
+
+
+
+
+
+```{r}
+colSums(is.na(full_df)) / dim(full_df)[1] *100
 ```
 
 
-```{r, include=FALSE}
+
+
+
+
+
+### Por sexo
+
+
+Se va a visualizar los valores faltantes en función del sexo:
+
+```{r}
+# Filtramos los valores NA en la columna Total y contamos por Sexo
+na_counts <- full_df %>%
+  filter(is.na(Total)) %>%
+  count(Sexo, sort = TRUE)
+
+# Calculamos el porcentaje de NA para cada Sexo
+na_counts <- na_counts %>%
+  mutate(percentage = n / sum(n) * 100)
+
+# Creamos el gráfico con ggplot2
+ggplot(na_counts, aes(x = reorder(Sexo, n), y = n)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  geom_text(aes(label = paste0(round(percentage, 1), "%")), vjust = -0.5) +  # Añadimos etiquetas de porcentaje
+  coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+  labs(
+    title = "Conteo de Sexo con Valores NA en Total",
+    x = "Sexo",
+    y = "Cantidad de NA"
+  ) +
+  theme_minimal()
 ```
 
 
-```{r, include=FALSE}
+
+
+Los porcentajes que se muestran en el gráfico indican la proporción de valores faltantes en la columna *Total* para cada categoría de Sexo (Mujeres y Hombres) en relación con el total de valores NA en esa columna. Por lo que se puede observar, el 80.4% de todos los valores NA en la columna *Total* corresponden a la categoría Mujeres u Hombres. Por tanto, no tiene sentido trabajar con obervaciones de hombres y mujeres y se decidió trabajar únicamente con el total en cuanto al sexo y por municipios (no se tiene en cuenta Total Nacional ya que es redundante y se puede obtener sumando el de municipios).
+
+
+```{r}
+# (mun_df) Ahora solo se va a usar el dataset Sexo=Total y por municipios (no se tiene en cuenta Total Nacional ya que es redundante y se puede obtener sumando el de municipios)
 ```
 
 
-```{r, include=FALSE}
+```{r}
+colSums(is.na(mun_df)) / dim(mun_df)[1] *100
 ```
+
+
+Se observa una mejora del porcentaje de datos faltantes total al prescindir de esta variable.
+
+
+### Por indicadores
+
+```{r}
+mun_df %>% 
+  arrange(Indicadores) %>% 
+  vis_miss()
+
+mun_df %>% 
+  filter(is.na(Total)) %>%
+  count(Indicadores, sort = TRUE)
+
+mun_df %>% 
+  filter(is.na(Total)) %>%
+  count(Indicadores, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Indicadores, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "Conteo de Indicadores con Valores NA en Total",
+      x = "Indicadores",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
+```
+
+
+```{r}
+mun_df %>% 
+  filter(is.na(Total)) %>%
+  count(Indicadores, sort = TRUE) 
+```
+
+
+
+### Por periodo
+
+
+
+
+
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+No se encontraron observaciones duplicadas.
+
+Los datos faltantes en la variable *Municipios* eran los valores asociados a *Total Nacional*. Por lo que se eliminó la columna *Total Nacional* y se rellenó los NA con el Valor "Total Nacional".
+
+También se observó que al modificar el tipo de la variable *Total* se apreció un aumento del número de valores faltantes.  Esto se debió a que había 1461 observaciones en el dataframe social con un valor de ".." en la variable *Total* que al transformarlos a numéricos, R los asoció a valores vacíos NA.
