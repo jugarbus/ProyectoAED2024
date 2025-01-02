@@ -358,7 +358,7 @@ Como se observa en la gráfica superior, la distribución de los NAs por cada in
 
 
 ```{r, include=FALSE}
-# Obtenemos los porcenntajes de valores faltantes
+# Obtenemos los porcentajes de valores faltantes
 na_ind_count <- total_df_nosex %>% 
   filter(is.na(Total)) %>%
   count(Indicadores, sort = TRUE)
@@ -507,7 +507,7 @@ diff_total <- abs(medianas_total[,2] - medias_total[,2])
 
 ```{r}
 total_data <- clean_total_df %>%
-  left_join(medianas, by = "Indicadores") %>%
+  left_join(medianas_total, by = "Indicadores") %>%
   mutate(Total = ifelse(is.na(Total), mediana_total, Total)) %>%
   select(-mediana_total)  # Eliminar la columna de medianas después de la imputación
 
