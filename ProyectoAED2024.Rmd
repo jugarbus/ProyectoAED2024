@@ -74,6 +74,7 @@ endnotes: false
 output: 
   rticles::mdpi_article:
     extra_dependencies: longtable
+always_allow_html: true
 ---
 
 
@@ -101,7 +102,7 @@ Hablar de los 3 datasets y de donde se han obtenido. BLABLABLA
 
 ```{r, include=FALSE}
 rm(list = ls())
-pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate, visdat) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
+pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate, visdat, knitr) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
 ```
 
 
@@ -507,7 +508,7 @@ diff_total <- abs(medianas_total[,2] - medias_total[,2])
 
 ```{r}
 total_data <- clean_total_df %>%
-  left_join(medianas, by = "Indicadores") %>%
+  left_join(medianas_total, by = "Indicadores") %>%
   mutate(Total = ifelse(is.na(Total), mediana_total, Total)) %>%
   select(-mediana_total)  # Eliminar la columna de medianas después de la imputación
 
@@ -523,14 +524,420 @@ Para asegurar la consistencia de los datos, se realizó una imputación de los v
 
 
 
-## Análisis univariante
+## Análisis univariante 
 
 ```{r}
 # mun_data  DATAFRAME POR MUNICIPIOS LIMPIO
 # total_data DATAFRAME TOTAL NACIONAL LIMPIO
+
+```
+
+### Características generales
+
+En esta sección se lleva a cabo un análisis preeliminar de los dos datasets que van a ser estudiados, prestando especial atención a las posibles anomalías, como datos inconsistentes u outliers.
+
+Se estudian paralelamente los dos dataframes: uno de ellos contiene los valores de los indicadores para cada municipio (`r nrow(mun_data)` observaciones), y el otro  los valores del total nacional (`r nrow(total_data)` observaciones). Ambos sets de datos contienen las siguientes variables:
+
+```{r}
+codebook <- data.frame(
+  Variable = colnames(mun_data),
+  Tipo = c("Texto","Texto","Fecha","Numérica"),
+  Niveles = c(
+    length(unique(c(total_data$Municipios, mun_data$Municipios))),
+    length(unique(c(total_data$Indicadores, mun_data$Indicadores))),
+    length(unique(c(total_data$Periodo, mun_data$Periodo))),
+    "N/A"),
+  Valores = c(
+    paste(c(head(unique(c(as.character(total_data$Municipios), as.character(mun_data$Municipios))), 2),
+          "...",
+          tail(unique(c(as.character(total_data$Municipios), as.character(mun_data$Municipios))), 1)), 
+          collapse = ", "),
+    paste(c(head(unique(c(as.character(total_data$Indicadores), as.character(mun_data$Indicadores))), 1),
+          "...",
+          tail(unique(c(as.character(total_data$Indicadores), as.character(mun_data$Indicadores))), 1)), 
+          collapse = ", "),
+    paste(range(c(mun_data$Periodo, total_data$Periodo)), collapse = " - "),
+    paste(range(c(mun_data$Total, total_data$Total)), collapse = " - ")),
+  Descripción = c(
+    "Municipio del que se han obtenido los datos.", 
+    "Estadístico demográfico, económico o social que se está calculando.",
+    "Año al que hace referencia el indicador estadístico.",
+    "Valor numérico asociado al indicador estadístico, que puede ser un valor absoluto, una tasa o un porcentaje.")
+  )
+
+
+    
+kable(codebook)
+     
+```
+
+Sin embargo, para nuestro análisis es relevante considerar cada indicador como una variable individual, en lugar de mantenerlos agrupados en la columna *Indicadores*. 
+Para facilitar la posterior manipulación de los datos, optamos por transformar los datasets a formato wide, de manera que quede cada indicador como una variable nueva. Además, se abrevian los nombres de los indicadores. 
+
+```{r}
+
+mun_wide <- pivot_wider(mun_data, names_from="Indicadores", values_from="Total")
+total_wide <- pivot_wider(total_data, names_from="Indicadores", values_from="Total")
+
+abrev <- c("Municipios", "Periodo", "Pob_Residente", 
+               "Prop_0_14", "Prop_15_64", "Prop_65", "Edad_Mediana",
+               "Prop_Nacionales", "Prop_Nativos", "Prop_Nacidos_Extranjero",
+               "Prop_Extranjeros", "Tasa_Natalidad", "Tasa_Mortalidad", 
+               "Esperanza_Vida", "Num_Hijos_Mujer", "Tasa_Desempleo",
+               "Prop_Ocupados_20_64", "Tasa_Actividad", "Prop_Empleo_Servicios",
+               "Prop_Empleo_Industria", "Num_Hogares", "Tam_Hogares",
+               "Prop_Hogares_1Persona", "Num_Viviendas_Catastro")
+
+summary_indicadores <- data.frame(
+  Indicador = colnames(mun_wide)[-c(1,2)],
+  Abreviatura = abrev[-c(1,2)]
+)
+
+names(mun_wide) <- abrev
+names(total_wide) <- abrev
+
+```
+
+En el caso de las variables *Municipio* y *Periodo*, son consideradas como variables no númericas y se han revisado sus valores únicos y sus frecuencias absolutas y relativas, para asegurar que no hay ninguna anomalía.
+
+```{r, include = FALSE}
+# Obtenemos las frecuencias aboslutas de la variable Municipios
+sort(table(mun_wide$Municipios))
+
+# Obtenemos las frecuencias aboslutas de la variable Municipios, en ambos dfs
+sort(table(mun_wide$Periodo))
+sort(table(mun_wide$Periodo))
+
+# Al realizar este analisis después de la limpieza inicial de los datos y su imputación, vemos que todos los municipios y los periodos estan igualmente representados
 ```
 
 
+Respecto a las variables numéricas, se revisan sus principales estadísticos descriptivos, para detectar posibles: valores negativos, tasas o proporciones mayores que 100, etc... De nuevo no se detectan inconsistencias.
+
+```{r include=FALSE}
+# En el caso del dataset por municipios:
+summary(mun_wide[-c(1,2)])
+
+# En el caso del dataset de Total Nacional:
+summary(mun_wide[-c(1,2)])
+
+```
+
+### Exploración visual
+
+Para buscar valores anómalos se decide graficar los indicadores en boxplots. 
+
+```{r}
+# Escalar las variables numéricas restando la media y dividiendo entre la desviación estandar para poder comparar todos los indicadores en un solo grafico
+# Convertir a formato largo para poder obtener el gráfico con ggplot2
+mun_data_transformed <- mun_wide %>%
+  mutate(across(where(is.numeric), scale)) %>%
+  pivot_longer(cols = where(is.numeric), 
+               names_to = "Indicadores", 
+               values_to = "Total")
+
+ggplot(mun_data_transformed, aes(x = Indicadores, y = Total)) +
+  geom_boxplot(fill = "darkturquoise", color = "black") + 
+  theme_minimal() +
+  labs(
+    title = "Boxplot de los Indicadores por municipios",
+    x = "Indicador",
+    y = "Total"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotar las etiquetas del eje x
+    plot.title = element_text(hjust = 0.5)  # Centrar el título
+  )
+```
+```{r}
+# Convertir a formato largo para poder obtener el gráfico con ggplot2
+total_data_transformed <- total_wide %>%
+  mutate(across(where(is.numeric), scale)) %>%
+  pivot_longer(cols = where(is.numeric), 
+               names_to = "Indicadores", 
+               values_to = "Total")
+
+ggplot(total_data_transformed, aes(x = Indicadores, y = Total)) +
+  geom_boxplot(fill = "darkturquoise", color = "black") + 
+  theme_minimal() +
+  labs(
+    title = "Boxplot de los Indicadores de Total Nacional",
+    x = "Indicador",
+    y = "Total"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotar las etiquetas del eje x
+    plot.title = element_text(hjust = 0.5)  # Centrar el título
+  )
+```
+
+Se considera relevante estudiar individualmente aquellos indicadores que parecen susceptibles de presentar datos anómalos:
+
+* De los datos por municipios, los indicadores: *Número de hogares*, *Número de Viviendas según Catastro* y *Población residente*, ya que parecen presentar una subpoblación con valores muy elevados.
+
+* De los datos del Total Nacional: *Esperanza de Vida*, *Número de Hogares*, *Número de Viviendas según Catastro*, *Proporción de Población entre 0 y 14 años*, *Proporción de Empleos en Industria*, *Proporción de Empleo en Servicios y Tasa de Mortalidad*.
+
+```{r}
+# Seleccionamos los indicadores que tenemos que revisar
+revisar_mun <- abrev <- c("Pob_Residente",  "Num_Hogares", "Num_Viviendas_Catastro")
+
+graficos1 = list()
+# Realizamos boxplots interactivos con puntos (jitter)
+for (r in revisar_mun){
+ 
+   # Grafico con ggplot
+  ggplot_box <- 
+    ggplot(mun_wide, aes(x = "1", y = mun_wide[[r]])) +
+    geom_boxplot( fill = "darkturquoise", alpha = 0.5) +
+    geom_jitter( aes( text = paste( "Municipio:", Municipios, "<br>Periodo:", Periodo,"<br>Total", mun_wide[[r]] )), width = 0.2, height = 0, shape = 21, color = "black", fill = "darkturquoise", alpha = 0.7) +
+    theme_minimal() +
+    labs( y = " ", x = r ) +
+    theme( axis.title.x = element_text(face = "bold"), axis.text.x = element_blank(), axis.ticks.x = element_blank() )
+  
+  # Convertir el gráfico a interactivo
+  interactive_plot <- ggplotly(ggplot_box, tooltip = "text")
+  
+  # Guardar el gráfico en una lista
+  graficos1 <- append(graficos1, list(interactive_plot))
+}
+
+
+revisar_total <- abrev <- c("Prop_0_14", 
+               "Esperanza_Vida", "Tasa_Mortalidad", "Prop_Empleo_Servicios",
+               "Prop_Empleo_Industria", "Num_Hogares", "Num_Viviendas_Catastro")
+
+graficos2 = list()
+# Realizamos boxplots interactivos con puntos (jitter)
+for (r in revisar_total[6:7]){
+  # Grafico con ggplot
+  ggplot_box <- 
+    ggplot(total_wide, aes(x = "1", y = total_wide[[r]])) +
+    geom_boxplot( fill = "darkturquoise", alpha = 0.5) +
+    geom_jitter( aes( text = paste("Periodo:", Periodo,"<br>Total", total_wide[[r]]  )), width = 0.2, height = 0, shape = 21, color = "black", fill = "darkturquoise", alpha = 0.7) +
+    theme_minimal() +
+    labs( y = " ", x = r ) +
+    theme( axis.title.x = element_text(face = "bold"), axis.text.x = element_blank(), axis.ticks.x = element_blank() )
+  
+  # Convertir el gráfico a interactivo
+  interactive_plot <- ggplotly(ggplot_box, tooltip = "text")
+  
+  # Guardar el gráfico en una lista
+  graficos2 <- append(graficos2, list(interactive_plot))
+}
+
+graficos3 = list()
+# Realizamos boxplots interactivos con puntos (jitter)
+for (r in revisar_total[c(2,4)]){
+  # Grafico con ggplot
+  ggplot_box <- 
+    ggplot(total_wide, aes(x = "1", y = total_wide[[r]])) +
+    geom_boxplot( fill = "darkturquoise", alpha = 0.5) +
+    geom_jitter( aes( text = paste( "Periodo:", Periodo,"<br>Total", total_wide[[r]] )), width = 0.2, height = 0, shape = 21, color = "black", fill = "darkturquoise", alpha = 0.7) +
+    theme_minimal() +
+    labs( y = " ", x = r ) +
+    theme( axis.title.x = element_text(face = "bold"), axis.text.x = element_blank(), axis.ticks.x = element_blank() )
+  
+  # Convertir el gráfico a interactivo
+  interactive_plot <- ggplotly(ggplot_box, tooltip = "text")
+  
+  # Guardar los gráficos en una lista
+  graficos3 <- append(graficos3, list(interactive_plot))
+}
+
+graficos4 = list()
+# Realizamos boxplots interactivos con puntos (jitter)
+for (r in revisar_total[c(1,3,5)]){
+  # Grafico con ggplot
+  ggplot_box <- 
+    ggplot(total_wide, aes(x = "1", y = total_wide[[r]])) +
+    geom_boxplot( fill = "darkturquoise", alpha = 0.5) +
+    geom_jitter( aes( text = paste( "Periodo:", Periodo,"<br>Total", total_wide[[r]] )), width = 0.2, height = 0, shape = 21, color = "black", fill = "darkturquoise", alpha = 0.7) +
+    theme_minimal() +
+    labs( y = " ", x = r ) +
+    theme( axis.title.x = element_text(face = "bold"), axis.text.x = element_blank(), axis.ticks.x = element_blank() )
+  
+  # Convertir el gráfico a interactivo
+  interactive_plot <- ggplotly(ggplot_box, tooltip = "text")
+  
+  # Guardar los gráficos en una lista
+  graficos4 <- append(graficos4, list(interactive_plot))
+}
+
+# Juntamos los gráficos
+y_min <- 0
+y_max <- max(mun_wide[, revisar_mun]) + 160000
+ticks <- seq(y_min, y_max, by = 500000)
+subplot(graficos1, nrows = 1, shareX = TRUE, shareY = TRUE) %>% layout(yaxis = list(range = c(y_min, y_max), tickvals = ticks))
+
+y_min <- min(total_wide[, revisar_total[6:7]], na.rm = TRUE) - 1000000
+y_max <- max(total_wide[, revisar_total[6:7]]) + 1200000
+ticks <- seq(y_min, y_max, by = 1000000)
+subplot(graficos2, nrows = 1, shareX = TRUE, shareY = TRUE) %>% layout(yaxis = list(range = c(y_min, y_max), tickvals = ticks))
+
+y_min <- min(total_wide[, revisar_total[c(2,4)]]) - 1
+y_max <- max(total_wide[, revisar_total[c(2,4)]]) + 1
+ticks <- seq(y_min, y_max, by = 10)
+subplot(graficos3, nrows = 1, shareX = TRUE, shareY = TRUE) %>% layout(yaxis = list(range = c(y_min, y_max), tickvals = ticks))
+
+y_min <- min(total_wide[, revisar_total[c(1,3,5)]]) - 1
+y_max <- max(total_wide[, revisar_total[c(1,3,5)]]) + 1
+ticks <- seq(y_min, y_max, by = 10)
+subplot(graficos4, nrows = 1, shareX = TRUE, shareY = TRUE) %>% layout(yaxis = list(range = c(y_min, y_max), tickvals = ticks))
+
+```
+
+* En el caso del dataset por municipios:
+
+  + Para las variables *Población Residente*, *Número de Hogares* y *Número de Viviendas según Catastro*, los valores más altos son los correspondientes a los municipios Madrid y Barcelona, lo que tiene sentido al ser los municipios más poblados, y por lo tanto estos datos no son considerados anómalos.
+  
+En el caso del dataset del Total Nacional:
+
+  + La variable *Número de Hogares* presenta un valor bastante bajo pero el año 2010, sin embargo, vemos que es un valor que se ajusta a la tendencia creciente del número de hogares a lo largo de los años, por lo tanto no se trata de un dato anómalo.
+  
+```{r}
+ggplot(data = total_wide, aes(y = Num_Hogares, x = Periodo)) +
+  geom_line(color = "darkturquoise", size = 1) +
+  theme_minimal()
+```
+
+  +  La variable de *Número de Viviendas según Catastro* no aparecía en el boxplot múltiple. Esto se debe a que en el dataset original, solo se ha registrado el Total Nacional de esta variable en el año 2023, y al imputar el resto de valores con la mediana, todos los años terminan teniendo el mismo valor total. Posteriormente, al restar la media durante el proceso de estandarización, todos los valores de esta variable se convierten en 0, lo que impide que aparezca en el gráfico.
+  
+```{r}
+# Obtenemos los porcentajes de valores faltantes
+na_ind_count <- clean_total_df %>% 
+  filter(is.na(Total)) %>%
+  count(Indicadores, name = "missing", sort = TRUE)
+
+total_ind <- clean_total_df %>% 
+  count(Indicadores, name = "n", sort = TRUE)
+
+na_ind_count <- na_ind_count %>%
+  left_join(total_ind, by = "Indicadores") %>%
+  mutate(perc = (missing / n) * 100)
+
+kable(na_ind_count)
+
+```
+
+  +  En el caso de la variable *Esperanza de Vida* vemos que hay valores que superan los "límites" superior e inferior, pero siguen siendo muy similares al resto, ya que la desviación típica de esta variable es muy pequeña, `r sd(total_wide$Esperanza_Vida)`. Por lo tanto tampoco se consideran valores anómalos. 
+  
+  +  En las variables *Proporción de Empleo en Servicios* y *Proporción de Empleo en Industria*, observamos una situación similar a la anterior (variables con desviación típica pequeña y rango reducido). Además, los valores más "extremos" corresponden a los mismos años, pero se comportan de manera inversa entre sí. De nuevo, estos valores no se consideran anómalos.
+  
+```{r}
+prop_empleos <- data.frame(
+  Variable = c("Prop_Empleo_Industria", "Prop_Empleo_Servicios"),
+  SD = c(sd(total_wide$Prop_Empleo_Industria), sd(total_wide$Prop_Empleo_Servicios)),
+  Mínimo = c(min(total_wide$Prop_Empleo_Industria), min(total_wide$Prop_Empleo_Servicios)),
+  Máximo = c(max(total_wide$Prop_Empleo_Industria), max(total_wide$Prop_Empleo_Servicios))
+)
+kable(prop_empleos)
+
+# df_prop_empleos <- total_wide[c("Periodo", "Prop_Empleo_Industria", "Prop_Empleo_Servicios")]
+# 
+# ggplot(df_prop_empleos)+
+#   geom_line(aes(x = Periodo, y = Prop_Empleo_Industria, color = "darkturquoise"))+
+#   geom_line(aes(x = Periodo, y = Prop_Empleo_Servicios, color = "darkred"))+
+#   scale_y_continuous(limits = c(0, 100))
+```
+
+  
+  +  En el caso de la variable *Proporción de población de  0-14 años*, el dato `r max(total_wide$Prop_0_14)` sí se considera un dato anómalo, ya que es un valor muy alto en comparación al resto (el resto de valores de la variable oscilan entre `r range(total_wide$Prop_0_14[-which.max(total_wide$Prop_0_14)])`%). Además, para cada observación, la suma de las variables *Prop_0_14*, *Prop_15_64* y *Prop_65* da un resultado muy cercano al 100%, pero para en el caso del dato anómalo la suma resulta en `r sum(total_wide[which.max(total_wide$Prop_0_14),4:6])`.
+Se decide corregir este valor para que la suma de las tres proporciones sea 100.
+
+```{r}
+# Reemplazamos en el formato wide
+i <- which.max(total_wide$Prop_0_14)
+nuevo_valor <- 100 - total_wide$Prop_15_64[i] - total_wide$Prop_65[i]
+total_wide$Prop_0_14[i] <- nuevo_valor 
+
+
+# Reemplazamos en el formato long
+i <- total_data %>%
+  filter(Indicadores == "Proporción de población de  0-14 años (Porcentaje)") %>%
+  pull(Total) %>% which.max()
+
+total_data[i, "Total"] <- nuevo_valor
+
+
+```
+
+  + Finalmente revisamos el valor máximo de la variable *Tasa de Mortalidad*. Aunque es superior a los demás, la diferencia no es excesiva. Este valor corresponde al año 2020, por lo que el aumento en la tasa de mortalidad podría estar relacionado con la pandemia de COVID-19. A pesar de que este dato podría tener un impacto significativo, no se considera un valor anómalo.
+
+### Estadísticos descriptivos
+
+Una vez eliminado e imputado el dato anómalo encontrado, se vuelven a calcular los estadisticos descriptivos de las variables numéricas, es decir, de todos los indicadores de ambos datasets.
+
+```{r}
+# En el caso del dataset por municipios:
+
+numericas <- mun_wide %>% select(where(is.numeric))
+
+estadisticos <- data.frame(
+  Abreviatura = character(),
+  Min = numeric(),
+  Q1 = numeric(),
+  Media = numeric(),
+  Mediana = numeric(),
+  Q3 = numeric(),
+  Max = numeric(),
+  Rango = numeric(),
+  SD = numeric()
+)
+
+for (i in 1:ncol(numericas)) {
+  
+  indicador <- colnames(numericas)[i]
+  estadisticos[i, "Abreviatura"] <- indicador
+  estadisticos[i, "Min"] <- min(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Q1"] <- quantile(numericas[[indicador]], 0.25, na.rm = TRUE)
+  estadisticos[i, "Media"] <- mean(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Mediana"] <- median(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Q3"] <- quantile(numericas[[indicador]], 0.75, na.rm = TRUE)
+  estadisticos[i, "Max"] <- max(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Rango"] <- max(numericas[[indicador]], na.rm = TRUE) - min(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "SD"] <- sd(numericas[[indicador]], na.rm = TRUE)
+}
+
+summary_indicadores_mun <- inner_join(summary_indicadores, estadisticos)
+
+kable(summary_indicadores_mun)
+
+
+# En el caso del dataset de Total Nacional:
+
+numericas <- total_wide %>% select(where(is.numeric))
+
+estadisticos <- data.frame(
+  Abreviatura = character(),
+  Min = numeric(),
+  Q1 = numeric(),
+  Media = numeric(),
+  Mediana = numeric(),
+  Q3 = numeric(),
+  Max = numeric(),
+  Rango = numeric(),
+  SD = numeric()
+)
+
+for (i in 1:ncol(numericas)) {
+  
+  indicador <- colnames(numericas)[i]
+  estadisticos[i, "Abreviatura"] <- indicador
+  estadisticos[i, "Min"] <- min(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Q1"] <- quantile(numericas[[indicador]], 0.25, na.rm = TRUE)
+  estadisticos[i, "Media"] <- mean(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Mediana"] <- median(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Q3"] <- quantile(numericas[[indicador]], 0.75, na.rm = TRUE)
+  estadisticos[i, "Max"] <- max(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Rango"] <- max(numericas[[indicador]], na.rm = TRUE) - min(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "SD"] <- sd(numericas[[indicador]], na.rm = TRUE)
+}
+
+summary_indicadores_total <- inner_join(summary_indicadores, estadisticos)
+
+kable(summary_indicadores_total)
+
+```
 
 ## Análisis bivariante
 
