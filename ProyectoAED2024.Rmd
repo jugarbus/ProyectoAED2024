@@ -626,11 +626,11 @@ options(scipen = 999)
 
 medianas_mun <- clean_mun_df %>%
   group_by(Indicadores) %>%
-  summarise(mediana_total = median(Total, na.rm = TRUE))
+  summarise(mediana_mun = median(Total, na.rm = TRUE))
 
 medias_mun <- clean_mun_df %>%
   group_by(Indicadores) %>%
-  summarise(media_total = mean(Total, na.rm = TRUE))
+  summarise(media_mun = mean(Total, na.rm = TRUE))
 
 diff_mun <- abs(medianas_mun[,2] - medias_mun[,2])
 
@@ -644,8 +644,8 @@ diff_mun <- abs(medianas_mun[,2] - medias_mun[,2])
 ```{r}
 mun_data <- clean_mun_df %>%
   left_join(medianas_mun, by = "Indicadores") %>%
-  mutate(Total = ifelse(is.na(Total), mediana_total, Total)) %>%
-  select(-mediana_total)  # Eliminar la columna de medianas después de la imputación
+  mutate(Total = ifelse(is.na(Total), mediana_mun, Total)) %>%
+  select(-mediana_mun)  # Eliminar la columna de medianas después de la imputación
 
 ```
 
