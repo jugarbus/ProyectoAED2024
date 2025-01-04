@@ -581,7 +581,7 @@ colSums(is.na(clean_total_df)) / dim(clean_total_df)[1] *100
 ```
 
 
-Estos valores van a ser imputados mediante una medida de tendencia central, dependiendo del indicador al que esté asociada cada observación.
+Estos valores van a ser imputados mediante una medida de tendencia central, dependiendo del indicador al que esté asociada cada observación. Destacar también que se estudió la existencia de observaciones duplicadas, obteniendo ausencia de estos.
 
 
 #### Imputación
