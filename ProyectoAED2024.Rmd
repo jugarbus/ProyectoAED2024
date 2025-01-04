@@ -681,3 +681,72 @@ Para asegurar la consistencia de los datos, se realizó una imputación de los v
 # mun_data  DATAFRAME POR MUNICIPIOS LIMPIO
 # total_data DATAFRAME TOTAL NACIONAL LIMPIO
 ```
+
+
+## Visualizacion Mapas
+
+Para visualizar los datos de toda España, utilizaremos la librería mapSpain. Esta herramienta nos permite representar diversos indicadores sobre el mapa español y dispone de funciones para obtener los nombres de todos los municipios de España. El primer paso consistirá en comprobar que los nombres de los municipios en nuestra base de datos coinciden con los proporcionados por la librería, y resolver cualquier discrepancia que pueda existir.
+
+```{r}
+library(mapSpain)
+```
+
+
+```{r}
+# Obtener los datos de municipios usando esp_get_munic
+map_municipios <- esp_get_munic()
+
+#print(map_municipios$name)
+#print(unique(map_municipios$ine.ccaa.name))
+# Extraer nombres de los municipios
+map_municipios_names <- unique(map_municipios$name)
+mun_data_names <- unique(mun_data$Municipios)
+
+# Comparar nombres
+matched <- mun_data_names %in% map_municipios_names
+names_not_matched <- mun_data_names[!matched]
+
+names_not_matched_corrected <- c("Alcoy / Alcoi", "Alicante / Alacant", "Castellón de la Plana / Castelló de la Plana", "Donostia / San Sebastián", "Elche / Elx", "Palma de Mallorca", "Pamplona / Iruña", "Sagunto / Sagunt", "San Vicente del Raspeig / Sant Vicent del Raspeig", "Valencia")
+
+# Mostrar resultados
+print("Municipios que coinciden:")
+print(mun_data_names[matched])
+
+print("Municipios que no coinciden:")
+print(names_not_matched)
+print(names_not_matched_corrected)
+```
+
+```{r}
+map_municipios <- esp_get_munic()
+map_municipios_names <- unique(map_municipios$name) # Nombres municipios en la libreria mapSpain
+
+mun_data_names <- unique(mun_data$Municipios) # Nonmbres municipios en nuestro df
+
+matched <- mun_data_names %in% map_municipios_names # Nombres que coinciden
+names_not_matched <- mun_data_names[!matched] # Nombres que no coinciden
+
+print("Municipios que no coinciden:")
+print(names_not_matched)
+
+```
+
+Comprobamos manualmente como estan guardados los nombres que no coinciden en la librería mapSpain y lo ajustamos en nuestros datos.
+
+```{r} 
+names_not_matched_corrected <- c("Alcoy / Alcoi", "Alicante / Alacant", "Castellón de la Plana / Castelló de la Plana", "Donostia / San Sebastián", "Elche / Elx", "Palma de Mallorca", "Pamplona / Iruña", "Sagunto / Sagunt", "San Vicente del Raspeig / Sant Vicent del Raspeig", "Valencia")
+
+names_mapping <- setNames(names_not_matched_corrected, names_not_matched)
+
+mun_data_corrected <- mun_data %>%
+  mutate(Municipios = recode(Municipios, !!!names_mapping))
+
+```
+
+Comprobamos que en nuestros datos ya no tenemos ningun municipio guardado como en la lista de no coincidencias y que estan los 10 municipios corregidos.
+
+```{r}
+dim(mun_data_corrected[mun_data_corrected$Municipios %in% names_not_matched,]) 
+dim(mun_data_corrected[mun_data_corrected$Municipios %in% names_not_matched_corrected,]) == dim(mun_data[mun_data$Municipios %in% names_not_matched,])
+```
+
