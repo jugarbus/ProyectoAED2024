@@ -753,37 +753,8 @@ dim(mun_data_corrected[mun_data_corrected$Municipios %in% names_not_matched_corr
 ## EJEMPLOS REPRESENTACIONES
 
 ```{r}
-# Supongamos que tienes mun_data cargado en tu entorno
-# Filtrar por el año 2017 y un indicador específico
-mun_data_2017 <- mun_data %>%
-  filter(Periodo == as.Date("2010-01-01"),
-         Indicadores == "Tasa de desempleo (Porcentaje)")
-
-# Descargar los datos espaciales de municipios
-map_municipios <- esp_get_munic()
-
-# Unir los datos espaciales con los datos filtrados
-map_municipios <- map_municipios %>%
-  left_join(mun_data_2017, by = c("name" = "Municipios"))
-map_municipios <- map_municipios %>%
-  group_by(ine.prov.name) %>%
-  mutate(Total = mean(Total, na.rm = TRUE)) %>%
-  ungroup()
-
-
-# Crear el mapa
-g1 <- ggplot(data = map_municipios) +
-  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
-  scale_fill_viridis_c(option = "plasma", na.value = "lightgray") +  # Escala de color
-  theme_minimal() +
-  labs(title = "Tasa de desempleo (Porcentaje)",
-       subtitle = "Año 2010",
-       fill = "Porcentaje",
-       caption = "Fuente: Datos propios y mapSpain")
-
-
+library(sf)
 ```
-
 
 
 ```{r}
@@ -881,9 +852,13 @@ g4 <- ggplot(data = map_municipios_2019) +
        caption = "Fuente: Datos propios y mapSpain")
 library(gridExtra)
 print(g1)
-grid.arrange(g1, g2, g3, g4, nrow=2, ncol=2)
 
 ```
+
+```{r}
+grid.arrange(g1, g2, g3, g4, nrow=2, ncol=2)
+```
+
 
 
 
