@@ -535,6 +535,86 @@ Para asegurar la consistencia de los datos, se realizó una imputación de los v
 ## Análisis bivariante
 
 ```{r}
-# mun_data  DATAFRAME POR MUNICIPIOS LIMPIO
-# total_data DATAFRAME TOTAL NACIONAL LIMPIO
+library(corrplot)
+library(GGally)
+
+abrev <- c("Municipios", "Periodo", "Pob_Residente", 
+               "Prop_0_14", "Prop_15_64", "Prop_65", "Edad_Mediana",
+               "Prop_Nacionales", "Prop_Nativos", "Prop_Nacidos_Extranjero",
+               "Prop_Extranjeros", "Tasa_Natalidad", "Tasa_Mortalidad", 
+               "Esperanza_Vida", "Num_Hijos_Mujer", "Tasa_Desempleo",
+               "Prop_Ocupados_20_64", "Tasa_Actividad", "Prop_Empleo_Servicios",
+               "Prop_Empleo_Industria", "Num_Hogares", "Tam_Hogares",
+               "Prop_Hogares_1Persona", "Num_Viviendas_Catastro")
+
+### mun_data  DATAFRAME POR MUNICIPIOS LIMPIO
+# Pivotamos a formato ancho para simplificar el analisis
+wide_mun_data <- mun_data %>% pivot_wider(names_from=Indicadores, values_from=Total)
+wide_mun_data$Periodo <- as.factor(format(wide_mun_data$Periodo, "%Y"))
+colnames(wide_mun_data) <- abrev
+
+## Calculamos la matriz de correlacion
+# Seleccionamos solo las columnas numericas
+numeric_data <- wide_mun_data[, sapply(wide_mun_data, is.numeric)]
+
+# Calcular matriz de correlación
+cor_matrix <- cor(numeric_data)
+
+## Visualización con corrplot
+par(mar = c(0.5, 0.5, 1, 0.5))  # Márgenes pequeños
+corrplot(cor_matrix,
+         method = "color",
+         type = "lower",
+         tl.cex = 0.6,           # Tamaño de etiquetas
+         cl.cex = 1,             # Tamaño barra de colores
+         addgrid.col = NA,       # Sin líneas de rejilla
+         tl.col = "black",
+         mar = c(0, 0, 1, 0),    # Eliminar márgenes adicionales
+         title = "Matriz de correlaciones entre indicadores")
+
+# Generar gráficos de dispersión para todos los pares
+ggpairs(numeric_data,
+        title = "Diagramas de dispersión y correlación entre indicadores",
+        progress = TRUE)
+
+# ggpairs_plot <- ggpairs(numeric_data, progress = TRUE)
+# ggsave("scatterplot_matrix.png", plot = ggpairs_plot, width = 50, height = 50, limitsize = F)
+
+# Convertir matriz de correlación a formato largo
+cor_long <- as.data.frame(as.table(cor_matrix))
+
+# Filtrar correlaciones significativas (|r| > 0.7)
+high_corr <- cor_long[abs(cor_long$Freq) > 0.7 & cor_long$Var1 != cor_long$Var2, ]
+
+# Eliminar duplicados manteniendo solo una de las combinaciones
+high_corr <- high_corr[!duplicated(t(apply(high_corr[, c("Var1", "Var2")], 1, sort))), ]
+
+# Ordenar por magnitud de la correlación
+high_corr <- high_corr[order(-abs(high_corr$Freq)), ]
+high_corr
+
+
+### total_data DATAFRAME TOTAL NACIONAL LIMPIO
+```
+
+```{r}
+for (i in 1:nrow(high_corr)) {
+  var1 <- high_corr[i,]$Var1
+  var2 <- high_corr[i,]$Var2
+  
+  # Crear el diagrama de dispersión
+  plot <- ggplot(wide_mun_data, aes_string(x = as.character(var1), y = as.character(var2))) +
+    geom_point(aes(color = Periodo)) +
+    geom_smooth(method = "lm", se = FALSE, color = "black") +  # Línea de tendencia lineal para cada año
+    theme_minimal() +
+    labs(
+      title = paste("Diagrama de dispersión:", as.character(var1), "vs", as.character(var2)),
+      x = var1,
+      y = var2,
+      caption = paste("Coeficiente de correlación:", round(high_corr[i,]$Freq, 2))
+    )
+  
+  # Mostrar el gráfico
+  print(plot)
+}
 ```
