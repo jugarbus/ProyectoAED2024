@@ -577,8 +577,8 @@ ggpairs(numeric_data,
         title = "Diagramas de dispersión y correlación entre indicadores",
         progress = TRUE)
 
-# ggpairs_plot <- ggpairs(numeric_data, progress = TRUE)
-# ggsave("scatterplot_matrix.png", plot = ggpairs_plot, width = 50, height = 50, limitsize = F)
+ggpairs_plot <- ggpairs(numeric_data, progress = TRUE)
+ggsave("scatterplot_matrix.png", plot = ggpairs_plot, width = 50, height = 50, limitsize = F)
 
 # Convertir matriz de correlación a formato largo
 cor_long <- as.data.frame(as.table(cor_matrix))
@@ -592,9 +592,6 @@ high_corr <- high_corr[!duplicated(t(apply(high_corr[, c("Var1", "Var2")], 1, so
 # Ordenar por magnitud de la correlación
 high_corr <- high_corr[order(-abs(high_corr$Freq)), ]
 high_corr
-
-
-### total_data DATAFRAME TOTAL NACIONAL LIMPIO
 ```
 
 ```{r}
@@ -612,6 +609,77 @@ for (i in 1:nrow(high_corr)) {
       x = var1,
       y = var2,
       caption = paste("Coeficiente de correlación:", round(high_corr[i,]$Freq, 2))
+    )
+  
+  # Mostrar el gráfico
+  print(plot)
+}
+```
+
+
+```{r}
+### total_data DATAFRAME TOTAL NACIONAL LIMPIO
+# Pivotamos a formato ancho para simplificar el analisis
+wide_total_data <- total_data %>% pivot_wider(names_from=Indicadores, values_from=Total)
+wide_total_data$Periodo <- as.factor(format(wide_total_data$Periodo, "%Y"))
+colnames(wide_total_data) <- abrev
+
+## Calculamos la matriz de correlacion
+# Seleccionamos solo las columnas numericas
+numeric_data_total <- wide_total_data[, sapply(wide_total_data, is.numeric)]
+
+# Calcular matriz de correlación
+cor_matrix_total <- cor(numeric_data_total)
+
+## Visualización con corrplot
+par(mar = c(0.5, 0.5, 1, 0.5))  # Márgenes pequeños
+corrplot(cor_matrix_total,
+         method = "color",
+         type = "lower",
+         tl.cex = 0.6,           # Tamaño de etiquetas
+         cl.cex = 1,             # Tamaño barra de colores
+         addgrid.col = NA,       # Sin líneas de rejilla
+         tl.col = "black",
+         mar = c(0, 0, 1, 0),    # Eliminar márgenes adicionales
+         title = "Matriz de correlaciones entre indicadores")
+
+# Generar gráficos de dispersión para todos los pares
+ggpairs(numeric_data_total,
+        title = "Diagramas de dispersión y correlación entre indicadores",
+        progress = TRUE)
+
+ggpairs_plot <- ggpairs(numeric_data_total, progress = TRUE)
+ggsave("scatterplot_matrix_total.png", plot = ggpairs_plot, width = 50, height = 50, limitsize = F)
+
+# Convertir matriz de correlación a formato largo
+cor_long_total <- as.data.frame(as.table(cor_matrix_total))
+
+# Filtrar correlaciones significativas (|r| > 0.7)
+high_corr_total <- cor_long_total[abs(cor_long_total$Freq) > 0.7 & cor_long_total$Var1 != cor_long_total$Var2, ]
+
+# Eliminar duplicados manteniendo solo una de las combinaciones
+high_corr_total <- high_corr_total[!duplicated(t(apply(high_corr_total[, c("Var1", "Var2")], 1, sort))), ]
+
+# Ordenar por magnitud de la correlación
+high_corr_total <- high_corr_total[order(-abs(high_corr_total$Freq)), ]
+high_corr_total
+```
+
+```{r}
+for (i in 1:nrow(high_corr_total)) {
+  var1 <- high_corr_total[i,]$Var1
+  var2 <- high_corr_total[i,]$Var2
+  
+  # Crear el diagrama de dispersión
+  plot <- ggplot(wide_total_data, aes_string(x = as.character(var1), y = as.character(var2))) +
+    geom_point(aes(color = Periodo)) +
+    geom_smooth(method = "lm", se = FALSE, color = "black") +  # Línea de tendencia lineal para cada año
+    theme_minimal() +
+    labs(
+      title = paste("Diagrama de dispersión:", as.character(var1), "vs", as.character(var2)),
+      x = var1,
+      y = var2,
+      caption = paste("Coeficiente de correlación:", round(high_corr_total[i,]$Freq, 2))
     )
   
   # Mostrar el gráfico
