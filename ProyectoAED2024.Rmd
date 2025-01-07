@@ -101,7 +101,7 @@ Hablar de los 3 datasets y de donde se han obtenido. BLABLABLA
 
 ```{r, include=FALSE}
 rm(list = ls())
-pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate, visdat, ggpubr) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
+pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate, visdat, ggpubr, knitr, mice, DataExplorer, naniar) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
 ```
 
 
@@ -257,14 +257,16 @@ print(duplicated_rows)
 En esta sección previa al análisis univariante y bivariante se va a realizar un análisis de la estructura de los faltantes y del dataset en general. Para asegurar que nuestro conjunto de datos sea coherente, evaluaremos el porcentaje de valores faltantes (NA) presentes en cada variable:
 
 
-
+```{r}
+md.pattern(full_df)
+```
 
 ```{r}
-colSums(is.na(full_df)) / dim(full_df)[1] *100
+kable(colSums(is.na(full_df)) / dim(full_df)[1] *100)
 ```
 
 
-Del dataset completo, es decir, sin discriminar por total nacional ni sexo, únicamente se observan valores faltantes en la variable *Total*, siendo este un valor muy elevado. 
+Del dataset completo, es decir, sin discriminar por total nacional ni sexo, únicamente se observan valores faltantes en la variable *Total*, siendo este un valor muy elevado (71.26%). 
 
 Es importante señalar que durante la importación de los datasets, se eliminaron los datos faltantes en la variable Municipios que correspondían a los valores asociados a "Total Nacional". Por esta razón, se eliminó la columna Total Nacional y se rellenaron los valores NA de *Municipios* con el valor "Total Nacional".
 
@@ -455,7 +457,11 @@ na_ind_list <- result[result$perc < 50,]
 
 # Eliminamos los indicadores que tengan más de 50% de valores faltantes
 clean_total_df <- total_df_nosex %>% filter(Municipios=='Total Nacional') %>% 
-  filter(Indicadores %in% na_ind_list$Indicadores)
+  filter(Indicadores %in% na_ind_list$Indicadores) %>%
+  mutate(
+    Indicadores = as.factor(Indicadores),
+    Ind = as.factor(Ind)
+  ) %>% select(-Municipios)
 ```
 
 
@@ -477,7 +483,12 @@ na_ind_list_2 <- na_ind_count_2[na_ind_count_2$perc < 50,]
 
 # Eliminamos los indicadores que tengan más de 50% de valores faltantes
 clean_mun_df <- total_df_nosex %>% filter(Municipios!='Total Nacional') %>% 
-  filter(Indicadores %in% na_ind_list_2$Indicadores)
+  filter(Indicadores %in% na_ind_list_2$Indicadores) %>%
+  mutate(
+    Municipios = as.factor(Municipios),
+    Indicadores = as.factor(Indicadores),
+    Ind = as.factor(Ind)
+  )
 ```
 
 
@@ -571,20 +582,91 @@ print(head(n_na_period_2, 8))
 El análisis de los datos faltantes revela patrones interesantes. En ambos conjuntos de datos, el año 2023 presenta la mayor proporción de valores faltantes. Sin embargo, en el dataset municipal, se observa un período de estabilidad con un bajo porcentaje de datos faltantes entre 2010 y 2013. A pesar de estas variaciones, el porcentaje total de datos faltantes es relativamente bajo, inferior al 2%. Por lo tanto, se procederá a imputar estos valores para completar el conjunto de datos.
 
 
-Finalmente se observa una mejora de valores faltantes al prescindir de la variable Sexo y de los indicadores con mayor proporción de NAs:
+
+### Por municipios
 
 ```{r}
-colSums(is.na(clean_mun_df)) / dim(clean_mun_df)[1] *100
+clean_mun_df %>%
+  filter(is.na(Total)) %>%
+  count(Municipios, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Municipios, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "NAs por año del dataset por municipios",
+      x = "Periodo",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
 ```
+```{r}
+n_na_mun <- clean_mun_df %>% 
+  filter(is.na(Total)) %>%
+  count(Municipios, sort = TRUE, name = "n_na")
+
+total_period_2 <- clean_mun_df %>% 
+  count(Municipios, sort = TRUE)
+
+
+n_na_mun$n_total <- total_period_2$n
+
+n_na_mun$perc <- n_na_mun$n_na / total_period_2$n * 100
+n_na_mun$perc_total <- n_na_mun$n_na / dim(clean_mun_df)[1] * 100
+n_na_mun
+```
+
+
+
+
+
+Finalmente se observa una mejora de valores faltantes al prescindir de la variable Sexo y de los indicadores con mayor proporción de NAs:
+
+
 ```{r}
 colSums(is.na(clean_total_df)) / dim(clean_total_df)[1] *100
 ```
+```{r}
+colSums(is.na(clean_mun_df)) / dim(clean_mun_df)[1] *100
+```
 
-
-Estos valores van a ser imputados mediante una medida de tendencia central, dependiendo del indicador al que esté asociada cada observación. Destacar también que se estudió la existencia de observaciones duplicadas, obteniendo ausencia de estos.
+Estos valores van a ser imputados mediante una medida de tendencia central, dependiendo del indicador al que esté asociada cada observación. Destacar también que se estudió la existencia de observaciones duplicadas, obteniendo ausencia de estas.
 
 
 #### Imputación
+
+
+
+
+
+# USAR MICE ?
+
+
+
+```{r}
+#libreria naniar
+mcar_test(clean_mun_df)
+```
+
+Dado que el valor p es 0, esto sugiere que los datos faltantes no son MCAR. Esto significa que los datos faltantes podrían ser MAR (Missing at Random) o MNAR (Missing Not at Random).
+
+
+```{r}
+#Parecen datos faltantes de tipo MAR (Missing At Random, es decir, dependen de variables observadas)
+
+# Imputar los valores faltantes utilizando mice
+#imputed_data <- mice(clean_mun_df, method = 'pmm', m = 5, maxit = 50, seed = 500)
+
+
+#mice_mun_data <- complete(imputed_data)
+
+# TARDA LA VIDA
+
+```
+
+
+
+
+
 
 
 
