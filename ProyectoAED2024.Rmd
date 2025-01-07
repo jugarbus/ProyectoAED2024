@@ -101,7 +101,7 @@ Hablar de los 3 datasets y de donde se han obtenido. BLABLABLA
 
 ```{r, include=FALSE}
 rm(list = ls())
-pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate, visdat, ggpubr) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
+pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate, visdat, ggpubr, mapSpain) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
 ```
 
 
@@ -958,4 +958,62 @@ grid.arrange(g1, g2, g3, g4, nrow=2, ncol=2)
 
 
 
+# TODOS LOS MAPAS
+Creamos todos los mapas (todos los indicadores y años) y los guardamos en un directorio llamado "graficos_mapas".
+
+```{r}
+# Crear directorio para guardar los mapas
+output_dir <- "graficos_mapas"
+dir.create(output_dir, showWarnings = FALSE)
+
+indicadores <- unique(mun_data$Indicadores)
+map_municipios <- esp_get_munic()
+
+for (indicador in indicadores) {
+  mun_data_generico <- mun_data %>%
+    filter(Indicadores == indicador)
+  
+  # Calculamos la fecha de inicio y fin del indicador
+  fech_inicio <- min(mun_data_generico$Periodo)
+  fech_final <- max(mun_data_generico$Periodo)
+  fechas_bucle <- seq(fech_inicio, fech_final, by = "year")
+  
+  for (fecha in fechas_bucle) {
+    fecha <- as.Date(fecha)
+    mun_data_generico_fecha <- mun_data_generico %>%
+      filter(Periodo == fecha)
+ 
+    map_municipios_generico_fecha <- map_municipios %>%
+      left_join(mun_data_generico_fecha, by = c("name" = "Municipios"))
+    
+    map_municipios_generico_fecha <- map_municipios_generico_fecha %>%
+      group_by(ine.prov.name) %>%
+      mutate(Total = mean(Total, na.rm = TRUE)) %>%
+      group_by(ine.prov.name, Total) %>%
+      summarise(geometry = st_union(geometry), .groups = "drop")    
+
+    map <- ggplot(data = map_municipios_generico_fecha) +
+      geom_sf(aes(fill = Total), color = "white") +
+      scale_fill_viridis_c(option = "plasma", na.value = "lightgray") +
+      theme_minimal() +
+      labs(title = paste(indicador),
+           subtitle = paste("Año", fecha),
+           fill = "Total")
+    print(map)
+    
+    ggsave(filename = paste0(output_dir, "/", indicador, "_", fecha, ".png"),
+           plot = map,
+           width = 8, height = 6)
+  }
+}
+
+
+
+```
+
+```{r}
+for(fecha in fechas_bucle){
+  print(as.Date(fecha))
+}
+```
 
