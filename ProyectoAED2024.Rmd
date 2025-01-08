@@ -672,6 +672,21 @@ mice_mun_data <- complete(imputed_data)
 wide_data_imputed <- wide_data
 wide_data_imputed[ , names(mice_mun_data)] <- mice_mun_data
 
+# Para algunos municipios e indicadores, los valores faltantes (NA) están al principio de la serie temporal, sin datos previos disponibles. Por lo tanto, necesitamos imputarlos de forma separada, utilizando extrapolación lineal
+
+wide_data_imputed <- wide_data_imputed %>%
+  group_by(Municipios) %>%
+  mutate(Nac_Ext_Total = zoo::na.approx(Nac_Ext_Total, x = Periodo, rule = 2, na.rm = FALSE))
+
+wide_data_imputed <- wide_data_imputed %>%
+  group_by(Municipios) %>%
+  mutate(Ext_Total = zoo::na.approx(Ext_Total, x = Periodo, rule = 2, na.rm = FALSE))
+
+wide_data_imputed <- wide_data_imputed %>%
+  group_by(Municipios) %>%
+  mutate(Ocup_20_64 = zoo::na.approx(Ocup_20_64, x = Periodo, rule = 2, na.rm = FALSE))
+
+
 # Volvemos al formato tidy
 tidy_data_imputed <- wide_data_imputed %>%
   pivot_longer(
@@ -918,4 +933,18 @@ for (i in 1:nrow(high_corr_total)) {
   print(plot)
 }
 ```
+
+
+
+########## BORRAR ABAJO
+
+Comprobamos que no hay ningun NA
+
+```{r}
+colSums(is.na(wide_data_imputed))
+```
+
+
+
+
 
