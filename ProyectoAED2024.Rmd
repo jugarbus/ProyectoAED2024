@@ -949,16 +949,19 @@ total_data_dem <- total_data %>% filter(Indicadores %in% indicadores_dem)
 grafico_dem <- ggplot(total_data_dem, aes(x = Periodo, y = Total, color = Indicadores)) +
   geom_line(size = 1.2) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  scale_color_discrete(guide = guide_legend(keywidth = 0.5, keyheight = 0.5))+
   theme_minimal() +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotar las etiquetas del eje x
+    axis.text.x = element_text(angle = 45, hjust = 1),  
     plot.title = element_text(hjust = 0.5),
-    legend.position = "bottom"
+    legend.position = "bottom",
+    legend.text = element_text(size = 8)
   )+
   labs(
     title = "Indicadores demográficos",
     x = "Periodo",
-    y = "Total"
+    y = "Total",
+    color = NULL
   )
 
 
@@ -969,16 +972,20 @@ total_data_empleo <- total_data %>% filter(Indicadores %in% indicadores_empleo)
 grafico_empleo <- ggplot(total_data_empleo, aes(x = Periodo, y = Total, color = Indicadores)) +
   geom_line(size = 1.2) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  scale_color_discrete(guide = guide_legend(keywidth = 0.5, keyheight = 0.5))+
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),  # Rotar las etiquetas del eje x
     plot.title = element_text(hjust = 0.5),
-    legend.position = "bottom"
+    legend.position = "bottom",
+    legend.text = element_text(size = 8)
+    
   )+
   labs(
     title = "Indicadores empleo",
     x = "Periodo",
-    y = "Total"
+    y = "Total",
+    color = NULL
   )
   
 
@@ -986,7 +993,7 @@ grafico_empleo <- ggplot(total_data_empleo, aes(x = Periodo, y = Total, color = 
 ```
 
 ```{r, out.width= "100%"}
-grid.arrange(grafico_dem, grafico_empleo, ncol = 1)
+grid.arrange(grafico_dem, grafico_empleo, ncol = 2)
 ```
 
 
@@ -1060,7 +1067,7 @@ for (i in 1:ncol(numericas)) {
 
 anexo1_2 <- kable(estadisticos, 
              digits = 2, 
-             caption = "Estadísticos Dataset por Municipios\\label{tabla:anexo1_1}")
+             caption = "Estadísticos Dataset Total Nacional\\label{tabla:anexo1_1}")
 
 ```
 
