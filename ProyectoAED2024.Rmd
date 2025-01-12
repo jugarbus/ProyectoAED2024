@@ -2,59 +2,33 @@
 title: Análisis exploratorio de un conjunto de datos de indicadores urbanos
 author:
   - name: Rebeca Company
-    affil: 1,2,\dagger
+    affil: 1,*
   - name: Alejandro Dionis
-    affil: 1,3,\dagger
+    affil: 1,*
   - name: Gabriel Ivars
-    affil: 1,4,\dagger
+    affil: 1,*
   - name: Julio Garcia
-    affil: 1,5,\dagger
+    affil: 1,*
 affiliation:
   - num: 1
     address: |
       Universitat de València -
       ETSE-UV, Avinguda de l'Universitat, 46100 Burjassot, Valencia
-  - num: 2
-    address: |
-      Máster Universitario en Ciencia de Datos
-    email: recombar@alumni.uv.es
-  - num: 3
-    address: |
-      Máster Universitario en Ciencia de Datos
-    email: adioros@alumni.uv.es
-  - num: 4
-    address: |
-      Máster Universitario en Ciencia de Datos
-    email: gaia2@alumni.uv.es
-  - num: 5
-    address: |
-      Máster Universitario en Ciencia de Datos
-    email: jugarbus@alumni.uv.es    
-# author citation list in chicago format
-authorcitation: |
-  Company, R.; Dionis, A.; Ivars, G.; Garcia, J.
-# firstnote to eighthnote
-firstnote: |
-  Todos los autores contribuyeron de manera equitativa a este trabajo.
 correspondence: |
   etse@uv.es; Tel.: +34-963-54-3211.
+authorcitation: |
+  Company, R.; Dionis, A.; Ivars, G.; Garcia, J.
   
 # document options
 journal: Universitat de València
 type: article
-status: submit
-# front matter
-simplesummary: |
-  El presente artículo es un proyecto de la Asignatura Análisis Exploratorio de Datos, en el que se realiza un análisis exploratorio del conjunto de datos de Indicadores Urbanos, publicado por el Instituto Nacional de Estadística.
 abstract: |
-  REDACTAR MÁS TARDE
+  El presente artículo es un proyecto de la Asignatura Análisis Exploratorio de Datos, en el que se realiza un análisis exploratorio del conjunto de datos de Indicadores Urbanos, publicado por el Instituto Nacional de Estadística. A lo largo del mismo se plantean y responden preguntas de interés sobre aspectos demográficos, económicos y sociales de España en los últimos 15 años. 
 # back matter
 keywords: |
-  Indicadores Urbanos; Tasa ; Población; REVISAR MAS TARDE
+  Indicadores Urbanos; Tasa ; Población, Análisis Exploratorio
 authorcontributions: |
     Todos los autores contribuyeron de manera equitativa a este trabajo.
-funding: |
-  This research received no external funding.
 dataavailability: |
   Los conjuntos de datos analizados en el presente artículo están disponibles en la sección "Indicadores Urbanos. Últimos datos." del repositorio público de conjuntos de datos abiertos del Instituto Nacional de Estadística INEbase
   \url{https://www.ine.es/dyngs/INEbase/listaoperaciones.htm}.
@@ -65,20 +39,18 @@ abbreviations:
     long: Multidisciplinary Digital Publishing Institute
   - short: INE
     long: Instituto Nacional de Estadística
-  - short: RMT
-    long: REVISAR MAS TARDE
-bibliography: mybibfile.bib
-appendix: appendix.tex
-# To use endnotes, change endnotes: true , then use \endnote{This 28 is an endnote.}.
 endnotes: false
 output: 
   rticles::mdpi_article:
-    extra_dependencies: longtable
+    extra_dependencies: ["float"]
+always_allow_html: true
+header-includes:
+  - \setlength{\parindent}{0pt} # Eliminar sangría
 ---
 
 
-```{r setup, include=FALSE, fig.align='left'}
-knitr::opts_chunk$set(echo = FALSE, warning=FALSE, out.width = '70%')
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, out.width = '100%', fig.align='left', message = FALSE, fig.pos = "H", out.extra = "")
 ```
 
 
@@ -91,7 +63,13 @@ Hablar de los 3 datasets y de donde se han obtenido. BLABLABLA
 
 # Objetivos
 
+El objetivo principal de este trabajo es llevar a cabo un análisis exploratorio de los conjuntos de datos seleccionados, con el fin de identificar posibles anomalías y comprender los aspectos más relevantes de la información contenida. Este análisis servirá como base para futuros estudios o para la aplicación de métodos más avanzados.
 
+Asimismo, se busca responder a las siguientes preguntas clave a partir de los datos analizados:
+
+* ¿Reflejan los datos algunos de los eventos más significativos en España, como la crisis económica de 2008-2014 o la pandemia de COVID-19 en 2019?
+
+* ¿Que podemos deducir sobre la situación demográfica de España a partir de estos datos?
 
 # Análisis exploratorio de los datos
 
@@ -101,7 +79,7 @@ Hablar de los 3 datasets y de donde se han obtenido. BLABLABLA
 
 ```{r, include=FALSE}
 rm(list = ls())
-pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate, visdat, ggpubr, knitr, mice, DataExplorer, naniar) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
+pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate, visdat, ggpubr, knitr, mice, DataExplorer, naniar, kableExtra, corrplot, GGally, gridExtra) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
 ```
 
 
@@ -375,7 +353,7 @@ Como se observa en la Tabla \ref{total_sex_na} y Tabla \ref{mun_sex_na}, tanto p
 ```{r}
 nombres_originales <- unique(total_df_nosex$Indicadores)
 
-nombres_abreviados <- c("Pob_Res", "Pob_0_14", "Pob_15_64", "Pob_65más", "Edad_Med", 
+nombres_abreviados <- c("Pob_Res", "Pob_0_14", "Pob_15_64", "Pob_65mas", "Edad_Med", 
                        "Nac_Total", "Nat_Nac_Total", "Nac_Ext_Total", "Ext_Total", 
                        "Tasa_Natalidad", "Tasa_Mortalidad", "Esp_Vida", "Hijos_Mujer", 
                        "Tasa_Desempleo", "Ocup_20_64", "Tasa_Actividad", "Emp_Servicios", 
@@ -708,11 +686,15 @@ wide_data <- clean_mun_df %>% select(-Indicadores) %>%
     values_from = Total
   )
 
-# Imputar los valores faltantes utilizando mice
-# imputed_data <- mice(wide_data %>% select(where(is.numeric)), method = 'rf', m = 5, maxit = 25, seed = 500)
-imputed_data <- mice(wide_data %>% select(where(is.numeric)), method = 'cart', m = 5, maxit = 25, seed = 500)
-
-mice_mun_data <- complete(imputed_data)
+# # Imputar los valores faltantes utilizando mice
+# # imputed_data <- mice(wide_data %>% select(where(is.numeric)), method = 'rf', m = 5, maxit = 25, seed = 500)
+# imputed_data <- mice(wide_data %>% select(where(is.numeric)), method = 'cart', m = 5, maxit = 25, seed = 500)
+# 
+# mice_mun_data <- complete(imputed_data)
+# 
+# # Guardamos como RData el dataframe mice_mun_data, para cargarlo en lugar de ejecutar la importación cada vez
+# saveRDS(mice_mun_data, file = "./data/mice_mun_data.rds" )
+mice_mun_data <- readRDS("./data/mice_mun_data.rds")
 
 # Combinar los datos imputados con las columnas originales (Municipios y Periodo)
 wide_data_imputed <- wide_data
@@ -751,22 +733,380 @@ Para el dataset por municipios se calcularon tanto la media como la mediana de T
 
 
 
-
-
-
-
-## Análisis univariante
+## Análisis Univariante
 
 ```{r}
-# mun_data  DATAFRAME POR MUNICIPIOS LIMPIO
-# total_data DATAFRAME TOTAL NACIONAL LIMPIO
+# mun_univ DATAFRAME TOTAL NACIONAL LIMPIO
+mun_univ <- mun_data %>% rename(Indicadores = Ind) %>% relocate(Indicadores, .before = Periodo)
+
+# total_univ DATAFRAME TOTAL NACIONAL LIMPIO
+total_univ <- total_data %>% select(-Indicadores) %>% rename(Indicadores = Ind) %>% relocate(Indicadores, .before = Periodo)
+
+```
+
+### Características generales
+
+En esta sección se lleva a cabo un análisis preeliminar de los dos datasets que van a ser estudiados, prestando especial atención a las posibles anomalías, como datos inconsistentes u outliers.
+
+Se estudian paralelamente los dos dataframes: uno de ellos contiene los valores de los indicadores para cada municipio (`r nrow(mun_univ)` observaciones), y el otro  los valores del total nacional (`r nrow(total_univ)` observaciones). En la Tabla \ref{tabla:codebook} podemos ver las variables y su tipo.
+
+```{r codebook}
+codebook <- data.frame(
+  Variable = colnames(mun_univ),
+  Tipo = c("Texto","Texto","Fecha","Numérica"),
+  Niveles = c(
+    length(unique(c(total_univ$Municipios, mun_univ$Municipios))),
+    length(unique(c(total_univ$Indicadores, mun_univ$Indicadores))),
+    length(unique(c(total_univ$Periodo, mun_univ$Periodo))),
+    "N/A"),
+  Valores = c(
+    paste(c(head(unique(c(as.character(total_univ$Municipios), as.character(mun_univ$Municipios))), 2),
+          "...",
+          tail(unique(c(as.character(total_univ$Municipios), as.character(mun_univ$Municipios))), 1)), 
+          collapse = ", "),
+    paste(c(head(unique(c(as.character(total_univ$Indicadores), as.character(mun_univ$Indicadores))), 1),
+          "...",
+          tail(unique(c(as.character(total_univ$Indicadores), as.character(mun_univ$Indicadores))), 1)), 
+          collapse = ", "),
+    paste(range(c(mun_univ$Periodo, total_univ$Periodo)), collapse = " - "),
+    paste(range(c(mun_univ$Total, total_univ$Total)), collapse = " - "))
+  )
+
+
+    
+kable(codebook, caption = "Variables de ambos datasets\\label{tabla:codebook}")
+     
+```
+
+* Municipios: Municipio del que se han obtenido los datos.
+* Indicadores: Estadístico demográfico, económico o social que se está calculando.
+* Periodo: Año al que hace referencia el indicador estadístico.
+* Total:Valor numérico asociado al indicador estadístico, que puede ser un valor absoluto, una tasa o un porcentaje.
+    
+Sin embargo, para nuestro análisis es relevante considerar cada indicador como una variable individual, en lugar de mantenerlos agrupados en la columna *Indicadores*, optamos por transformar los datasets a formato wide, de manera que quede cada indicador como una variable nueva. 
+
+```{r}
+# Transformamos ambos datasets a formato wide
+mun_wide <- pivot_wider(mun_univ, names_from="Indicadores", values_from="Total")
+total_wide <- pivot_wider(total_univ, names_from="Indicadores", values_from="Total")
+
+```
+
+En el caso de las variables *Municipio* y *Periodo*, son consideradas como variables no númericas y se han revisado sus valores únicos y sus frecuencias absolutas y relativas, para asegurar que no hay ninguna anomalía.
+
+```{r, include = FALSE}
+# Obtenemos las frecuencias aboslutas de la variable Municipios
+sort(table(mun_wide$Municipios))
+
+# Obtenemos las frecuencias aboslutas de la variable Municipios, en ambos dfs
+sort(table(mun_wide$Periodo))
+sort(table(total_wide$Periodo))
+
+# Al realizar este analisis después de la limpieza inicial de los datos y su imputación, vemos que todos los municipios y los periodos estan igualmente representados
 ```
 
 
+Respecto a las variables numéricas, se revisan sus principales estadísticos descriptivos, para detectar posibles valores negativos, tasas o proporciones mayores que 100, etc... De nuevo no se detectan inconsistencias.
+
+```{r include=FALSE}
+# En el caso del dataset por municipios:
+summary(mun_wide[-c(1,2)])
+
+# En el caso del dataset de Total Nacional:
+summary(mun_wide[-c(1,2)])
+
+```
+
+### Exploración visual
+
+Para buscar valores anómalos se decide graficar los indicadores en boxplots (Figuras \ref{fig:boxplot1} y \ref{fig:boxplot2}). 
+
+```{r boxplot1, fig.cap="Boxplot múltiple del dataset por municipios"}
+# Escalar las variables numéricas restando la media y dividiendo entre la desviación estandar para poder comparar todos los indicadores en un solo grafico
+# Convertir a formato largo para poder obtener el gráfico con ggplot2
+mun_univ_transformed <- mun_wide %>%
+  mutate(across(where(is.numeric), scale)) %>%
+  pivot_longer(cols = where(is.numeric), 
+               names_to = "Indicadores", 
+               values_to = "Total")
+
+ggplot(mun_univ_transformed, aes(x = Indicadores, y = Total)) +
+  geom_boxplot(fill = "skyblue", color = "black") + 
+  theme_minimal() +
+  labs(
+    title = "Boxplot de los Indicadores por municipios",
+    x = "Indicador",
+    y = "Total"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotar las etiquetas del eje x
+    plot.title = element_text(hjust = 0.5)  # Centrar el título
+  )
+```
+
+```{r boxplot2, fig.cap="Boxplot múltiple del dataset total nacional"}
+# Convertir a formato largo para poder obtener el gráfico con ggplot2
+total_univ_transformed <- total_wide %>%
+  mutate(across(where(is.numeric), scale)) %>%
+  pivot_longer(cols = where(is.numeric), 
+               names_to = "Indicadores", 
+               values_to = "Total")
+
+ggplot(total_univ_transformed, aes(x = Indicadores, y = Total)) +
+  geom_boxplot(fill = "skyblue", color = "black") + 
+  theme_minimal() +
+  labs(
+    title = "Boxplot de los Indicadores de Total Nacional",
+    x = "Indicador",
+    y = "Total"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotar las etiquetas del eje x
+    plot.title = element_text(hjust = 0.5)  # Centrar el título
+  )
+```
+
+Se decide estudiar individualmente aquellos indicadores que visualmente parecen susceptibles de presentar datos anómalos:
+
+* De los datos por municipios, ninguno de los indicadores parece presentar valores anómalos.
+
+* De los datos del Total Nacional: *Esperanza de Vida*, *Número de Hogares*,, *Proporción de Población entre 0 y 14 años*, *Proporción de Empleos en Industria*, *Proporción de Empleo en Servicios y Tasa de Mortalidad*.
+
+```{r}
+# Seleccionamos los indicadores que tenemos que revisar
+revisar_total <- abrev <- c("Pob_0_14", 
+               "Esp_Vida", "Tasa_Mortalidad", "Emp_Servicios",
+               "Emp_Industria")
+
+boxplots_mun = list()
+
+# Realizamos boxplots interactivos con puntos (jitter)
+for (r in revisar_total){
+  # Grafico con ggplot
+  ggplot_box <- 
+    ggplot(total_wide, aes(x = "1", y = total_wide[[r]])) +
+    geom_boxplot( fill = "skyblue", alpha = 0.5) +
+    geom_jitter( aes( text = paste("Periodo:", Periodo,"<br>Total", total_wide[[r]]  )), width = 0.2, height = 0, shape = 21, color = "black", fill = "skyblue", alpha = 0.7) +
+    theme_minimal() +
+    labs( y = " ", x = r ) +
+    theme( axis.title.x = element_text(face = "bold"), axis.text.x = element_blank(), axis.ticks.x = element_blank() )
+  
+  # Convertir el gráfico a interactivo
+  interactive_plot <- plotly::ggplotly(ggplot_box, tooltip = "text")
+  
+  # Guardar el gráfico en una lista
+  boxplots_mun <- append(boxplots_mun, list(interactive_plot))
+  # Estos graficos interactivos no se pueden incluir en pdf, pero podemos consultarlos en HTML o directamente en RStudio
+}
+
+
+```
+
+En el caso del dataset del Total Nacional:
+
+  +  En la variable *Esperanza de Vida* vemos que hay valores que superan los "límites" superior e inferior, a pesar de que siguen siendo muy similares al resto. Esto se debe a que esta variable presenta muy poca variabilidad (la desviación típica de esta variable es `r sd(total_wide$Esp_Vida)`). Por lo tanto tampoco se consideran valores anómalos. 
+  
+  +  En las variables *Proporción de Empleo en Servicios* y *Proporción de Empleo en Industria*, observamos una situación similar a la anterior (variables con poca variabilidad: desviación típica pequeña y rango reducido). Además, los valores más "extremos" corresponden a los mismos años, pero se comportan de manera inversa entre sí. De nuevo, estos valores no se consideran anómalos.
+  
+```{r, include=FALSE}
+prop_empleos <- data.frame(
+  Variable = c("Emp_Industria", "Emp_Servicios"),
+  SD = c(sd(total_wide$Emp_Industria), sd(total_wide$Emp_Servicios)),
+  Mínimo = c(min(total_wide$Emp_Industria), min(total_wide$Emp_Servicios)),
+  Máximo = c(max(total_wide$Emp_Industria), max(total_wide$Emp_Servicios))
+)
+kable(prop_empleos)
+
+# df_prop_empleos <- total_wide[c("Periodo", "Prop_Empleo_Industria", "Prop_Empleo_Servicios")]
+# 
+# ggplot(df_prop_empleos)+
+#   geom_line(aes(x = Periodo, y = Prop_Empleo_Industria, color = "skyblue"))+
+#   geom_line(aes(x = Periodo, y = Prop_Empleo_Servicios, color = "darkred"))+
+#   scale_y_continuous(limits = c(0, 100))
+```
+
+  
+  +  En el caso de la variable *Proporción de población de  0-14 años*, el dato `r max(total_wide$Pob_0_14)` sí se considera un dato anómalo, ya que es un valor muy alto en comparación al resto (el resto de valores de la variable oscilan entre `r range(total_wide$Pob_0_14[-which.max(total_wide$Pob_0_14)])`%). Además, para cada observación, la suma de las variables *Prop_0_14*, *Prop_15_64* y *Prop_65* da un resultado muy cercano al 100%, pero para en el caso del dato anómalo la suma resulta en `r sum(total_wide[which.max(total_wide$Pob_0_14),4:6])`.
+Se decide corregir este valor para que la suma de las tres proporciones sea 100.
+
+```{r}
+# Reemplazamos en el formato wide
+i <- which.max(total_wide$Pob_0_14)
+nuevo_valor <- 100 - total_wide$Pob_15_64[i] - total_wide$Pob_65mas[i]
+total_wide$Pob_0_14[i] <- nuevo_valor 
+
+# Reemplazamos en el formato long
+total_univ <- total_univ %>%
+  mutate( Total = ifelse(
+      Indicadores == "Pob_0_14" & Total == max(Total[Indicadores == "Pob_0_14"], na.rm = TRUE),
+      nuevo_valor,
+      Total))
+
+# Reemplazamos en el dataset original total_data, para que esté disponible para los siguientes análisis
+total_data <- total_data %>%
+  mutate( Total = ifelse(
+      Ind == "Pob_0_14" & Total == max(Total[Ind == "Pob_0_14"], na.rm = TRUE),
+      nuevo_valor,
+      Total))
+
+
+
+```
+
+  + Finalmente revisamos el valor máximo de la variable *Tasa de Mortalidad*. Este valor corresponde al año 2020, por lo que dicho en la tasa de mortalidad podría estar relacionado con la pandemia de COVID-19. A pesar de que este dato podría tener un impacto significativo, no se considera un valor anómalo y se decide mantenerlo porque aporta información que puede ser de utilidad.
+  
+Como parte del análisis univariante, también se lleva a cabo un estudio sobre las distribuciones de los diferentes indicadores a lo largo del tiempo. Para este análisis, se utiliza exclusivamente el dataset de Total Nacional, para obtener una visión general de todo el país y se destacan algunos puntos interesantes:
+
+* Indicadores demográficos (Tabla \ref{fig:tiempo} izquierda) : Los datos muestran claramente una tendencia al envejecimiento de la población. Esto se ve reflejado de forma direca en el aumento de la edad media, pero también en otros indicadores. A lo largo de los años, la proporción de población de 0 a 14 años disminuye de forma notable, mientras que aumentan las proporciones de población de 15 a 64 años y de más de 64 años. Esto se ve, reforzado por un descenso de la Tasa de Natalidad (con un pequeño repunte en los últimos años.
+
+* Indicadores económicos (Tabla \ref{fig:tiempo} derecha) : En cuanto a los indicadores económicos, se destacan los relacionados con el empleo. Como era de esperar, la Tasa de Desempleo y la Tasa de Ocupados (de 20 a 64 años) siguen tendencias opuestas con el paso de los años. Durante el periodo analizado, se aprecia una fase de recesión laboral hasta 2013, y tras el final de la crisis de la burbuja inmobiliaria (2008-2014), mejoran las tasas de desempleo y de ocupación, aunque sufren un pequeño descenso en 2019.
+
+
+```{r}
+indicadores_dem <- c("Pob_0_14", "Pob_15_64", "Pob_65mas", "Tasa_Natalidad", "Tasa_Mortalidad", "Edad_Med")
+
+total_univ_dem <- total_univ %>% filter(Indicadores %in% indicadores_dem)
+
+grafico_dem <- ggplot(total_univ_dem, aes(x = Periodo, y = Total, color = Indicadores)) +
+  geom_line(size = 1.2) +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  scale_color_discrete(guide = guide_legend(keywidth = 0.5, keyheight = 0.5))+
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "bottom",
+    legend.text = element_text(size = 8)
+  )+
+  labs(
+    title = "Indicadores demográficos",
+    x = "Periodo",
+    y = "Total",
+    color = NULL
+  )
+
+
+indicadores_empleo <- c("Tasa_Desempleo", "Ocup_20_64","Tasa_Actividad")
+
+total_univ_empleo <- total_univ %>% filter(Indicadores %in% indicadores_empleo)
+
+grafico_empleo <- ggplot(total_univ_empleo, aes(x = Periodo, y = Total, color = Indicadores)) +
+  geom_line(size = 1.2) +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  scale_color_discrete(guide = guide_legend(keywidth = 0.5, keyheight = 0.5))+
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotar las etiquetas del eje x
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "bottom",
+    legend.text = element_text(size = 8)
+    
+  )+
+  labs(
+    title = "Indicadores empleo",
+    x = "Periodo",
+    y = "Total",
+    color = NULL
+  )
+  
+
+
+```
+
+```{r tiempo, out.width= "100%", fig.cap="Estudio de los Indicadores respecto al PEriodo"}
+grid.arrange(grafico_dem, grafico_empleo, ncol = 2)
+```
+
+
+
+### Estadísticos descriptivos
+
+Una vez eliminado e imputado el dato anómalo encontrado, se vuelven a calcular los estadisticos descriptivos de las variables numéricas, es decir, de todos los indicadores de ambos datasets. Las tablas con los estadísticos descriptivos del dataset por municipios y del dataset total se muestran en las tablas \ref{tabla:anexo1_1} y \ref{tabla:anexo1_2} del Anexo 1.
+
+```{r}
+# En el caso del dataset por municipios:
+
+numericas <- mun_wide %>% select(where(is.numeric))
+numericas <- numericas[-1]
+
+estadisticos <- data.frame(
+  Indicador = character(),
+  Min = numeric(),
+  Q1 = numeric(),
+  Media = numeric(),
+  Mediana = numeric(),
+  Q3 = numeric(),
+  Max = numeric(),
+  SD = numeric()
+)
+
+for (i in 1:ncol(numericas)) {
+  
+  indicador <- colnames(numericas)[i]
+  estadisticos[i, "Indicador"] <- indicador
+  estadisticos[i, "Min"] <- min(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Q1"] <- quantile(numericas[[indicador]], 0.25, na.rm = TRUE)
+  estadisticos[i, "Media"] <- mean(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Mediana"] <- median(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Q3"] <- quantile(numericas[[indicador]], 0.75, na.rm = TRUE)
+  estadisticos[i, "Max"] <- max(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "SD"] <- sd(numericas[[indicador]], na.rm = TRUE)
+}
+
+anexo1_1 <- kable(estadisticos, 
+             digits = 2, 
+             caption = "Estadísticos Dataset por Municipios\\label{tabla:anexo1_1}")
+
+
+# En el caso del dataset de Total Nacional:
+
+numericas <- total_wide %>% select(where(is.numeric))
+
+estadisticos <- data.frame(
+  Indicador = character(),
+  Min = numeric(),
+  Q1 = numeric(),
+  Media = numeric(),
+  Mediana = numeric(),
+  Q3 = numeric(),
+  Max = numeric(),
+  SD = numeric()
+)
+
+for (i in 1:ncol(numericas)) {
+  
+  indicador <- colnames(numericas)[i]
+  estadisticos[i, "Indicador"] <- indicador
+  estadisticos[i, "Min"] <- min(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Q1"] <- quantile(numericas[[indicador]], 0.25, na.rm = TRUE)
+  estadisticos[i, "Media"] <- mean(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Mediana"] <- median(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "Q3"] <- quantile(numericas[[indicador]], 0.75, na.rm = TRUE)
+  estadisticos[i, "Max"] <- max(numericas[[indicador]], na.rm = TRUE)
+  estadisticos[i, "SD"] <- sd(numericas[[indicador]], na.rm = TRUE)
+}
+
+anexo1_2 <- kable(estadisticos, 
+             digits = 2, 
+             caption = "Estadísticos Dataset Total Nacional\\label{tabla:anexo1_2}")
+
+```
 
 ## Análisis bivariante
 
 ```{r}
 # mun_data  DATAFRAME POR MUNICIPIOS LIMPIO
 # total_data DATAFRAME TOTAL NACIONAL LIMPIO
+```
+
+En el Anexo 1, en la Tabla \ref{tabla:anexo1}
+
+# Anexo 1 {#Anexo}
+
+```{r anexo1_1, fig.pos='H'}
+anexo1_1
+```
+
+```{r anexo1_2, fig.pos='H'}
+anexo1_2
 ```
