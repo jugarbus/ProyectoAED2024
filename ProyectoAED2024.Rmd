@@ -202,7 +202,7 @@ Antes de importar, primero se verificó que la codificación de los tres dataset
 
 - *Municipios* : Municipio del que se han obtenido los datos.
 
-- *Indicadores* : Tipo de estadístico demográfico, económico o social que se está calculando en cada observación. Se comentarán mas a fondo en los hallazgos obtenidos, ya que se trata de un elevado número de indicadores.
+- *Indicadores* : Tipo de estadístico demográfico, económico o social que se está calculando en cada observación. Se comentarán mas a fondo en los hallazgos obtenidos, ya que se trata de un elevado número de indicadores (35 niveles).
 
 - *Sexo* : Sexo del cual se está obteniendo el indicador estadístico (hombre o mujer).
 
@@ -212,16 +212,10 @@ Antes de importar, primero se verificó que la codificación de los tres dataset
 
 
 
-Otras consideraciones que se tuvieron en cuenta fué que la variable *Total* del dataset social era de tipo character y se transformó a tipo numeric para poder realizar operaciones. Esto se debe a que esta columna contenía valores "..", que serán considerados como faltantes en nuestro análisis. Al importar estos valores, R determinó que la clase de esta variable era de tipo character.
-
-Además, se transformó la variable *Periodo* a tipo Date y la variable *Sexo* a tipo factor.
+Otras consideraciones que se tuvieron en cuenta fué que la variable *Total* del dataset social era de tipo "character" y se transformó a tipo "numeric" para poder realizar operaciones. Esto se debe a que esta columna contenía valores "..", que serán considerados como faltantes en nuestro análisis. Al importar estos valores, R determinó que la clase de esta variable era de tipo "character". Además, se transformó la variable *Periodo* a tipo "Date" y la variable *Sexo* a "factor".
 
 
-Posteriormente se concatenaron los tres datasets ya que tienen formato tidy.
-
-
-
-Finalmente, el dataset se separó en varias partes:
+Posteriormente se concatenaron los tres datasets ya que estaban en formato "tidy". y finalmente, el dataset se separó en cuatro partes:
 
 - Datos totales nacionales con *Sexo* = "Total".
 
@@ -254,33 +248,36 @@ print(duplicated_rows)
 
 
 
-En esta sección previa al análisis univariante y bivariante se va a realizar un análisis de la estructura de los faltantes y del dataset en general. Para asegurar que nuestro conjunto de datos sea coherente, evaluaremos el porcentaje de valores faltantes (NA) presentes en cada variable:
+En esta sección previa al análisis univariante y bivariante se realizó un análisis de la estructura de los faltantes y del dataset en general. Para asegurar que nuestro conjunto de datos sea coherente, se evaluó el porcentaje de valores faltantes (*NA*) presentes en cada variable:
 
 
-```{r}
-md.pattern(full_df)
-```
 
 ```{r}
-kable(colSums(is.na(full_df)) / dim(full_df)[1] *100)
+perc_total <- colSums(is.na(full_df)) / dim(full_df)[1] * 100
+perc_total <- as.data.frame(perc_total)
+
+# Cambiar el nombre de la columna
+perc_total <- perc_total %>% rename(Porcentaje = perc_total) %>% mutate(Porcentaje = round(Porcentaje, 2))
+
+kable(perc_total, caption = "Porcentajes de NAs\\label{total_na}")
 ```
 
 
-Del dataset completo, es decir, sin discriminar por total nacional ni sexo, únicamente se observan valores faltantes en la variable *Total*, siendo este un valor muy elevado (71.26%). 
+Del dataset completo, únicamente se observan valores faltantes en la variable *Total*, siendo este un valor muy elevado (71.26%). 
 
-Es importante señalar que durante la importación de los datasets, se eliminaron los datos faltantes en la variable Municipios que correspondían a los valores asociados a "Total Nacional". Por esta razón, se eliminó la columna Total Nacional y se rellenaron los valores NA de *Municipios* con el valor "Total Nacional".
+Es importante señalar que durante la importación de los datasets, se eliminaron los datos faltantes en la variable Municipios que correspondían a los valores asociados a "Total Nacional". Por esta razón, se eliminó la columna Total Nacional y se rellenaron los valores *NAs* de *Municipios* con el valor "Total Nacional".
 
-También se observó que al modificar el tipo de la variable *Total* se apreció un incremento del número de valores faltantes.  Esto se debió a las 1461 observaciones del dataframe social con un valor de ".." que al transformarlos a numéricos, R los asoció a valores NA.
+También se observó que al modificar el tipo de la variable *Total* se apreció un incremento del número de valores faltantes.  Esto se debió a las 1461 observaciones del dataframe social con un valor de ".." que al transformar a "numeric", R asoció dichos valores a valores faltantes.
 
 Además, no se encontraron observaciones duplicadas a lo largo del dataset completo.
 
 A continuación se van a estudiar estos valores faltantes en función del resto variables no numéricas.
 
 
-#### Por sexo
+#### Por *Sexo*
 
 
-```{r}
+```{r include=FALSE}
 g1 <- full_df %>% filter(Municipios=='Total Nacional') %>% 
   filter(is.na(Total)) %>%
   count(Sexo, sort = TRUE) %>%
@@ -322,12 +319,15 @@ n_na_sex <- full_df %>% filter(Municipios=='Total Nacional') %>%
 total_sex <- full_df %>% filter(Municipios=='Total Nacional') %>% 
   count(Sexo, sort = TRUE)
 
-n_na_sex$perc <- n_na_sex$n / total_sex$n * 100
-n_na_sex$perc_total <- n_na_sex$n / dim(full_df %>% filter(Municipios=='Total Nacional'))[1] * 100
+n_na_sex$Porcentaje <- round(n_na_sex$n / total_sex$n * 100, 2)
+n_na_sex$Porcentaje_total <- round(n_na_sex$n / dim(full_df %>% filter(Municipios == 'Total Nacional'))[1] * 100, 2)
+```
 
 
 
-n_na_sex
+
+```{r}
+kable(n_na_sex, caption = "Porcentajes de NAs por sexo en el dataset Total Nacional\\label{total_sex_na}")
 
 ```
 
@@ -341,19 +341,21 @@ n_na_sex_2 <- full_df %>% filter(Municipios!='Total Nacional') %>%
 total_sex_2 <- full_df %>% filter(Municipios!='Total Nacional') %>% 
   count(Sexo, sort = TRUE)
 
-n_na_sex_2$perc <- n_na_sex_2$n / total_sex_2$n * 100
-n_na_sex_2$perc_total <- n_na_sex_2$n / dim(full_df %>% filter(Municipios!='Total Nacional'))[1] * 100
+n_na_sex_2$Porcentaje <- n_na_sex_2$n / total_sex_2$n * 100
+n_na_sex_2$Porcentaje_total <- round(n_na_sex_2$n / dim(full_df %>% filter(Municipios!='Total Nacional'))[1] * 100,2 )
 
+```
 
+```{r}
 
-n_na_sex_2
+kable(n_na_sex_2, caption = "Porcentajes de NAs por sexo en el dataset por municipios\\label{mun_sex_na}")
 
 ```
 
 
 
 
-Tanto para hombres como para mujeres, aproximadamente el 85% de sus observaciones tienen valores faltantes en la columna *Total*, lo que representa mas o menos el 28% del total de observaciones en ambos conjuntos de datos. Para el nivel Total (variable *Sexo*), en torno al 40% de sus observaciones tienen valores faltantes, representando el 14% aproximandamente del total de observaciones en ambos dataframes. Por tanto, debido al elevado porcentaje de valores faltantes en las observaciones desglosadas por sexo, decidimos no incluir en el análisis observaciones de hombres y mujeres por separado y optamos por trabajar únicamente con el total combinado de ambos sexos. Por tanto, a partir de ahora se va a realizar el análisis sobre estos dos datasets:
+Como se observa en la Tabla \ref{total_sex_na} y Tabla \ref{mun_sex_na}, tanto para hombres como para mujeres, aproximadamente el 85% de sus observaciones tienen valores faltantes en la columna *Total*, lo que representa mas o menos el 28% del total de observaciones en ambos conjuntos de datos. Para el nivel Total (variable *Sexo*), en torno al 40% de sus observaciones tienen valores faltantes, representando el 14% aproximandamente del total de observaciones en ambos dataframes. Por tanto, debido al elevado porcentaje de valores faltantes en las observaciones desglosadas por sexo,se decidió no incluir en el análisis observaciones de hombres y mujeres por separado y optamos por trabajar únicamente con el total combinado de ambos sexos. Por tanto, a partir de esta decisión se continuó con el análisis de estos dos conjuntos de datos:
 
 - Datos totales nacionales con *Sexo* = "Total".
 
@@ -368,7 +370,7 @@ Tanto para hombres como para mujeres, aproximadamente el 85% de sus observacione
 ```
 
 
-#### Por indicadores
+#### Por *Indicadores*, *Periodo* y *Municipios*
 
 ```{r}
 nombres_originales <- unique(total_df_nosex$Indicadores)
@@ -389,7 +391,7 @@ total_df_nosex <- total_df_nosex %>%
 ```
 
 
-```{r}
+```{r include=FALSE}
  g3 <- total_df_nosex %>% filter(Municipios=='Total Nacional') %>% 
   filter(is.na(Total)) %>%
   count(Ind, sort = TRUE) %>%
@@ -422,8 +424,6 @@ ggarrange(g3, g4, nrow = 2, heights = c(1, 1))
 ```
 
 
-
-Como se observa en la gráfica superior, la distribución de los NAs por cada indicador no es uniforme en los dos datasets. Por tanto, como criterio, se van a prescindir de los que superen el 50% de valores faltantes relativo al total de observaciones para cada indicador.
 
 
 
@@ -462,6 +462,8 @@ clean_total_df <- total_df_nosex %>% filter(Municipios=='Total Nacional') %>%
     Indicadores = as.factor(Indicadores),
     Ind = as.factor(Ind)
   ) %>% select(-Municipios)
+
+# Son 14 indicadores los que se eliminan
 ```
 
 
@@ -489,17 +491,18 @@ clean_mun_df <- total_df_nosex %>% filter(Municipios!='Total Nacional') %>%
     Indicadores = as.factor(Indicadores),
     Ind = as.factor(Ind)
   )
+
+#Son 15 indicadores los que se eliminan
 ```
 
 
 
-#### Por periodo
+En ambos conjuntos de datos, la distribución de los valores faltantes variaba entre los diferentes niveles de las variables, alejándose considerablemente de una distribución uniforme. Como criterio, se eliminaron aquellos niveles de variables que tenían más del 50% de valores faltantes realtivo al número de observaciones de cada nivel.
+
+Para el caso de la variable *Indicadores*, se eliminaron  14 y 15 indicadores del conjunto de datos nacional y del de municipios, respectivamente.
 
 
-
-
-
-```{r}
+```{r include=FALSE}
  g5 <- clean_total_df %>%
   filter(is.na(Total)) %>%
   count(Periodo, sort = TRUE) %>%
@@ -530,7 +533,7 @@ ggarrange(g5, g6, nrow = 2, heights = c(1, 1.5))
 ```
 
 
-```{r}
+```{r include=FALSE}
 # Obtenemos los porcentajes de valores faltantes dataset Total Nacional
 na_period_count <- clean_total_df %>%
   filter(is.na(Total)) %>%
@@ -558,7 +561,7 @@ print(head(result_period, 5))
 ```
 
 
-```{r}
+```{r include=FALSE}
 n_na_period_2 <- clean_mun_df %>% 
   filter(is.na(Total)) %>%
   count(Periodo, sort = TRUE, name = "n_na")
@@ -579,13 +582,11 @@ print(head(n_na_period_2, 8))
 ```
 
 
-El análisis de los datos faltantes revela patrones interesantes. En ambos conjuntos de datos, el año 2023 presenta la mayor proporción de valores faltantes. Sin embargo, en el dataset municipal, se observa un período de estabilidad con un bajo porcentaje de datos faltantes entre 2010 y 2013. A pesar de estas variaciones, el porcentaje total de datos faltantes es relativamente bajo, inferior al 2%. Por lo tanto, se procederá a imputar estos valores para completar el conjunto de datos.
+Se observaron patrones interesantes en la variable *Periodo*. En ambos conjuntos de datos, el año 2023 presentaba la mayor proporción de valores faltantes. Sin embargo, en el dataset municipal, se identificó entre 2010 y 2013 un bajo porcentaje de datos faltantes (13.77%), siendo igual en los tres años. No obstante, el porcentaje total de datos faltantes para todos los años es relativamente bajo, inferior al 2%. Por lo tanto, se decidió imputar estos valores para completar el conjunto de datos.
 
 
 
-### Por municipios
-
-```{r}
+```{r include=FALSE}
 clean_mun_df %>%
   filter(is.na(Total)) %>%
   count(Municipios, sort = TRUE) %>%
@@ -599,7 +600,9 @@ clean_mun_df %>%
     ) +
     theme_minimal()
 ```
-```{r}
+
+
+```{r include=FALSE}
 n_na_mun <- clean_mun_df %>% 
   filter(is.na(Total)) %>%
   count(Municipios, sort = TRUE, name = "n_na")
@@ -617,57 +620,39 @@ n_na_mun
 
 
 
+En el caso de la variable *Municipios*, se puede destacar que se identificaron 17 municipios con un porcentaje considerable de valores faltantes, específicamente del 37.14%. Dado que este porcentaje no supera el 50%, se decidió imputar estos valores en lugar de prescindir de dichos municipios.	
+
+Finalmente, se observó una mejora de valores faltantes al prescindir de la variable *Sexo* y de los indicadores con mayor proporción de *NAs*:
 
 
-Finalmente se observa una mejora de valores faltantes al prescindir de la variable Sexo y de los indicadores con mayor proporción de NAs:
 
 
 ```{r}
-colSums(is.na(clean_total_df)) / dim(clean_total_df)[1] *100
-```
-```{r}
-colSums(is.na(clean_mun_df)) / dim(clean_mun_df)[1] *100
+df1 <- clean_total_df %>% select(-Ind)
+df2 <- clean_mun_df %>% select(-Ind)
+
+
+
+p_total <- round(colSums(is.na(df1)) / dim(df1)[1] *100, 2)
+p_mun <- round(colSums(is.na(df2)) / dim(df2)[1] *100, 2)
 ```
 
-Estos valores van a ser imputados mediante una medida de tendencia central, dependiendo del indicador al que esté asociada cada observación. Destacar también que se estudió la existencia de observaciones duplicadas, obteniendo ausencia de estas.
+
+```{r}
+kable(p_total, caption = "Porcentajes de NAs conjunto Total Nacional\\label{total_na_post}")
+```
+
+
+```{r}
+kable(p_mun, caption = "Porcentajes de NAs por municipios\\label{mun_na_post}")
+```
+
+
+
+Destacar también que se estudió la existencia de observaciones duplicadas, obteniendo ausencia de estas.
 
 
 #### Imputación
-
-
-
-
-
-# USAR MICE ?
-
-
-
-```{r}
-#libreria naniar
-mcar_test(clean_mun_df)
-```
-
-Dado que el valor p es 0, esto sugiere que los datos faltantes no son MCAR. Esto significa que los datos faltantes podrían ser MAR (Missing at Random) o MNAR (Missing Not at Random).
-
-
-```{r}
-#Parecen datos faltantes de tipo MAR (Missing At Random, es decir, dependen de variables observadas)
-
-# Imputar los valores faltantes utilizando mice
-#imputed_data <- mice(clean_mun_df, method = 'pmm', m = 5, maxit = 50, seed = 500)
-
-
-#mice_mun_data <- complete(imputed_data)
-
-# TARDA LA VIDA
-
-```
-
-
-
-
-
-
 
 
 
@@ -704,43 +689,65 @@ total_data <- clean_total_df %>%
 
 
 
-
-
-```{r}
-# Imputacion del dataset por municipios
-
-# Ajustar las opciones para mostrar números en notación decimal
-options(scipen = 999)
-
-
-medianas_mun <- clean_mun_df %>%
-  group_by(Indicadores) %>%
-  summarise(mediana_mun = median(Total, na.rm = TRUE))
-
-medias_mun <- clean_mun_df %>%
-  group_by(Indicadores) %>%
-  summarise(media_mun = mean(Total, na.rm = TRUE))
-
-diff_mun <- abs(medianas_mun[,2] - medias_mun[,2])
-
-# Como en ciertos indicadores difiere mucho la mediana de la media se imputa con la mediana
-
+```{r include=FALSE}
+#libreria naniar
+mcar_test(clean_mun_df)
 ```
 
 
 
+```{r include=FALSE}
+#Parecen datos faltantes de tipo MAR (Missing At Random, es decir, dependen de variables observadas)
 
-```{r}
-mun_data <- clean_mun_df %>%
-  left_join(medianas_mun, by = "Indicadores") %>%
-  mutate(Total = ifelse(is.na(Total), mediana_mun, Total)) %>%
-  select(-mediana_mun)  # Eliminar la columna de medianas después de la imputación
 
+# MICE trabaja con datos en formato wide
+
+wide_data <- clean_mun_df %>% select(-Indicadores) %>%
+  pivot_wider(
+    names_from = Ind,
+    values_from = Total
+  )
+
+# Imputar los valores faltantes utilizando mice
+# imputed_data <- mice(wide_data %>% select(where(is.numeric)), method = 'rf', m = 5, maxit = 25, seed = 500)
+imputed_data <- mice(wide_data %>% select(where(is.numeric)), method = 'cart', m = 5, maxit = 25, seed = 500)
+
+mice_mun_data <- complete(imputed_data)
+
+# Combinar los datos imputados con las columnas originales (Municipios y Periodo)
+wide_data_imputed <- wide_data
+wide_data_imputed[ , names(mice_mun_data)] <- mice_mun_data
+
+# Para algunos municipios e indicadores, los valores faltantes (NA) están al principio de la serie temporal, sin datos previos disponibles. Por lo tanto, necesitamos imputarlos de forma separada, utilizando extrapolación lineal
+
+wide_data_imputed <- wide_data_imputed %>%
+  group_by(Municipios) %>%
+  mutate(Nac_Ext_Total = zoo::na.approx(Nac_Ext_Total, x = Periodo, rule = 2, na.rm = FALSE))
+
+wide_data_imputed <- wide_data_imputed %>%
+  group_by(Municipios) %>%
+  mutate(Ext_Total = zoo::na.approx(Ext_Total, x = Periodo, rule = 2, na.rm = FALSE))
+
+wide_data_imputed <- wide_data_imputed %>%
+  group_by(Municipios) %>%
+  mutate(Ocup_20_64 = zoo::na.approx(Ocup_20_64, x = Periodo, rule = 2, na.rm = FALSE))
+
+
+# Volvemos al formato tidy
+mun_data <- wide_data_imputed %>%
+  pivot_longer(
+    cols = -c(Municipios, Periodo),
+    names_to = "Ind",
+    values_to = "Total"
+  )
 ```
 
 
+Para la imputación, en primera instancia se optó por imputar ambos datasets mediante una medida de tendencia central, dependiendo del indicador al que estaba asociada cada observación. Tras la imputación, en el caso del conjunto por municipios, se observó que esta imputación sesgaba los datos y se decidió usar una técnica más sofisticada.
 
-Para asegurar la consistencia de los datos, se realizó una imputación de los valores faltantes en la columna *Total.* Para llevar a cabo la imputación, se realizó por separado en dos datasets: uno para los valores separados por municipios, y otro para el total nacional. Después, para cada dataset se calcularon tanto la media como la mediana de *Total* para cada grupo de Indicadores. Luego, se compararon estas dos medidas y se observó que, en ciertos indicadores, la diferencia entre la media y la mediana era significativa. Debido a estas discrepancias, se decidió utilizar la mediana para la imputación, ya que es menos sensible a los valores atípicos. Finalmente, se imputaron los valores faltantes en la columna *Total* con la mediana correspondiente a cada grupo de Indicadores.
+Como en el análisis parecían existir ciertos patrones de los faltantes con las variables del conjunto de datos, se realizó el test de Little's MCAR, rechazando así la hipótesis nula de que los datos faltantes eran completamente al azar (Missing Completely At Random). Esto confirmó nuestra hipótesis de que podrían depender de las variables observadas (Missing At Random). Tras estos resultados, se empleó la función *mice* con el método 'cart' (Classification and Regression Trees). Este método crea árboles de decisión para predecir los valores faltantes basándose en las relaciones entre las variables observadas. No obstante, tras esta imputación, para algunos municipios e indicadores, los valores faltantes estaban al principio de la serie temporal, sin datos previos disponibles. Por tanto, se imputaron de forma separada, utilizando extrapolación lineal.
+
+Para el dataset por municipios se calcularon tanto la media como la mediana de Total para cada grupo de *Indicadores*. Luego, se compararon estas dos medidas y se observó que, en ciertos indicadores, la diferencia entre la media y la mediana era significativa. Debido a estas discrepancias, se decidió utilizar la mediana para la imputación, ya que es menos sensible a los valores atípicos.
 
 
 
