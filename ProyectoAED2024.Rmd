@@ -780,11 +780,6 @@ codebook <- data.frame(
 kable(codebook, caption = "Variables de ambos datasets\\label{tabla:codebook}")
      
 ```
-
-* Municipios: Municipio del que se han obtenido los datos.
-* Indicadores: Estadístico demográfico, económico o social que se está calculando.
-* Periodo: Año al que hace referencia el indicador estadístico.
-* Total:Valor numérico asociado al indicador estadístico, que puede ser un valor absoluto, una tasa o un porcentaje.
     
 Sin embargo, para nuestro análisis es relevante considerar cada indicador como una variable individual, en lugar de mantenerlos agrupados en la columna *Indicadores*, optamos por transformar los datasets a formato wide, de manera que quede cada indicador como una variable nueva. 
 
@@ -1182,7 +1177,7 @@ high_corr_spearman <- high_corr_spearman[order(-abs(high_corr_spearman$Freq)), ]
 
 En la figura \ref{fig:matriz_correlaciones_municipios} se pueden observar las matrices de correlaciones utilizando la correlación de Pearson y la correlación de Spearman, con el fin de observar tanto relaciones lineales como no lineales. Dado que no se aprecia una diferencia significativa entre las matrices, se puede inferir que las relaciones entre las variables son probablemente lineales o no lineales monótonas.
 
-```{r diagramas_dispersion, fig.width=15, fig.height=10, fig.cap= "\\label{fig:diagramas_dispersion}Diagramas de dispersión para los datos por municipios.", message=FALSE}
+```{r diagramas_dispersion, fig.width=14, fig.height=8, fig.cap= "\\label{fig:diagramas_dispersion}Diagramas de dispersión para los datos por municipios.", message=FALSE}
 
 # Crear diagramas de dispersión
 corr1 <- ggplot(wide_mun_data, aes(x = Tasa_Actividad, y = Pob_15_64)) +
@@ -1428,7 +1423,11 @@ names_not_matched <- mun_data_names[!matched] # Nombres que no coinciden
 #print("Municipios que no coinciden:")
 #print(names_not_matched)
 
-paste0("Municipios que no coinciden: ", paste(names_not_matched, collapse = ", "))
+t <- paste(names_not_matched, collapse = ", ")
+texto <- paste0("Municipios que no coinciden: ", paste(names_not_matched, collapse = ", "))
+texto_envuelto <- paste(strwrap(texto, width = 80), collapse = "\n")
+
+cat(texto_envuelto)
 
 ```
 
@@ -1447,7 +1446,8 @@ mun_data_corrected <- mun_data %>%
 
 En el apartado anterior, hemos analizado gráficamente variables que mostraban correlaciones significativas. Sin embargo, también es relevante considerar aquellos casos en los que dos variables no presentan correlación, ya que esto puede proporcionar información igualmente valiosa. Tal como se observa en la matriz de correlación y se mencionó previamente respecto a la "Tasa_Desempleo", las variables "Tasa_Desempleo" (tasa de desempleo) y "Ext_Total" (porcentaje de extranjeros) no muestran una relación significativa.
 
-A través de mapas, podemos examinar el comportamiento de estos dos indicadores en algunos años específicos. Para la variable "Tasa_Desempleo", se observa que su distribución evoluciona en función de la latitud: la tasa de desempleo es mayor a medida que avanzamos hacia el sur de España. Por otro lado, la variable "Ext_Total" evoluciona con respecto a la longitud: el porcentaje de extranjeros aumenta a medida que nos desplazamos hacia el este del país.
+A través de mapas, podemos examinar el comportamiento de estos dos indicadores en algunos años específicos. Para la variable "Tasa_Desempleo", se observa que su distribución evoluciona en función de la latitud: la tasa de desempleo es mayor a medida que avanzamos hacia el sur de España. Por otro lado, la variable "Ext_Total" evoluciona con respecto a la longitud: el porcentaje de extranjeros aumenta a medida que nos desplazamos hacia el este del país. Observamos que no tenemos datos en: Huesca, Segovia, Soria y Teruel
+
 
 ```{r, echo = FALSE}
 mun_data_2010_des <- mun_data_corrected %>%
@@ -1502,18 +1502,19 @@ g1 <- ggplot(data = map_municipios_2010_des) +
   geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
   scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value_des, max_value_des), direction = -1) +  # Mismo rango de colores
   theme_minimal() +
-  labs(title = "Tasa de desempleo",
-       subtitle = "Año 2010",
-       fill = "Porcentaje")
-
+  labs(title = "Tasa de desempleo, Año 2010",
+       fill = "Porcentaje") +
+  theme(plot.title = element_text(size = 10),
+    legend.title = element_text(size = 8))
 
 g2 <- ggplot(data = map_municipios_2016_des) +
   geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
   scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value_des, max_value_des), direction = -1) +  # Mismo rango de colores
   theme_minimal() +
-  labs(title = "Tasa de desempleo",
-       subtitle = "Año 2019",
-       fill = "Porcentaje")
+  labs(title = "Tasa de desempleo, Año 2019",
+       fill = "Porcentaje") +
+  theme(plot.title = element_text(size = 10),
+    legend.title = element_text(size = 8))
 
 map_municipios_2010_ext <- map_municipios %>%
   left_join(mun_data_2010_ext, by = c("name" = "Municipios"))
@@ -1543,126 +1544,25 @@ g3 <- ggplot(data = map_municipios_2010_ext) +
   geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
   scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value_act, max_value_act), direction = -1) +  # Escala de color
   theme_minimal() +
-  labs(title = "Porcentaje de Extranjeros",
-       subtitle = "Año 2010",
-       fill = "Porcentaje")
+  labs(title = "Porcentaje de Extranjeros, Año 2010",
+       fill = "Porcentaje") +
+  theme(plot.title = element_text(size = 10),
+    legend.title = element_text(size = 8))
 
 
 g4 <- ggplot(data = map_municipios_2019_ext) +
   geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
   scale_fill_viridis_c(option = "rocket", na.value = "lightgray",limits = c(min_value_act, max_value_act), direction = -1) +  # Escala de color
   theme_minimal() +
-  labs(title = "Porcentaje de Extranjeros",
-       subtitle = "Año 2019",
-       fill = "Porcentaje")
+  labs(title = "Porcentaje de Extranjeros, Año 2019",
+       fill = "Porcentaje") +
+  theme(plot.title = element_text(size = 10),
+    legend.title = element_text(size = 8))
 
 
 grid.arrange(g1, g2, g3, g4, nrow=2, ncol=2)
 
 ```
-
-Se han representado los mapas correspondientes a la variable "Proporción de empleo en servicios (NACE Rev.2 G-U) (Porcentaje)" para los años 2019, 2020 y 2021. A través de estas representaciones, es posible observar el impacto del COVID-19 en esta variable.
-
-```{r, echo=FALSE}
-mun_data_2010_des <- mun_data_corrected %>%
-  filter(Periodo == as.Date("2019-01-01"),
-         Ind == "Emp_Servicios")
-mun_data_2019_des <- mun_data_corrected %>%
-  filter(Periodo == as.Date("2020-01-01"),
-         Ind == "Emp_Servicios")
-mun_data_2010_ext <- mun_data_corrected %>%
-  filter(Periodo == as.Date("2021-01-01"),
-         Ind == "Emp_Servicios")
-
-# Find the min and max values of the indicator for both 2010 and 2013
-min_value_des <- mun_data_corrected %>% filter(Ind == "Emp_Servicios") %>% pull(Total) %>% min(na.rm = TRUE)
-max_value_des <- mun_data_corrected %>% filter(Ind == "Emp_Servicios") %>% pull(Total) %>% max(na.rm = TRUE)
-
-min_value_act <- mun_data_corrected %>% filter(Ind == "Emp_Servicios") %>% pull(Total) %>% min(na.rm = TRUE)
-max_value_act <- mun_data_corrected %>% filter(Ind == "Emp_Servicios") %>% pull(Total) %>% max(na.rm = TRUE)
-
-# Plot for 2010
-map_municipios_2010_des <- map_municipios %>%
-  left_join(mun_data_2010_des, by = c("name" = "Municipios"))
-map_municipios_2010_des <- map_municipios_2010_des %>%
-  group_by(ine.prov.name) %>%
-  mutate(Total = mean(Total, na.rm = TRUE)) %>%
-  group_by(ine.prov.name, Total) %>%
-  summarise(geometry = st_union(geometry), .groups = "drop")
-
-# Plot for 2013
-map_municipios_2016_des <- map_municipios %>%
-  left_join(mun_data_2019_des, by = c("name" = "Municipios"))
-map_municipios_2016_des <- map_municipios_2016_des %>%
-  group_by(ine.prov.name) %>%
-  mutate(Total = mean(Total, na.rm = TRUE)) %>%
-  group_by(ine.prov.name, Total) %>%
-  summarise(geometry = st_union(geometry), .groups = "drop")
-
-
-m1 <- map_municipios_2010_des %>% pull(Total) %>% min(na.rm = TRUE)
-m2 <- map_municipios_2016_des %>% pull(Total) %>% min(na.rm = TRUE)
-min_value_act <- min(m1, m2)
-m3 <- map_municipios_2010_des %>% pull(Total) %>% max(na.rm = TRUE)
-m4 <- map_municipios_2016_des %>% pull(Total) %>% max(na.rm = TRUE)
-max_value_act <- max(m3, m4)
-
-
-g1 <- ggplot(data = map_municipios_2010_des) +
-  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
-  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value_des, max_value_des), direction = -1) +  # Mismo rango de colores
-  theme_minimal() +
-  labs(title = "Emp_Servicios",
-       subtitle = "Año 2019",
-       fill = "Porcentaje")
-
-
-g2 <- ggplot(data = map_municipios_2016_des) +
-  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
-  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value_des, max_value_des), direction = -1) +  # Mismo rango de colores
-  theme_minimal() +
-  labs(title = "Emp_Servicios",
-       subtitle = "Año 2020",
-       fill = "Porcentaje")
-
-map_municipios_2010_ext <- map_municipios %>%
-  left_join(mun_data_2010_ext, by = c("name" = "Municipios"))
-map_municipios_2010_ext <- map_municipios_2010_ext %>%
-  group_by(ine.prov.name) %>%
-  mutate(Total = mean(Total, na.rm = TRUE)) %>%
-  group_by(ine.prov.name, Total) %>%
-  summarise(geometry = st_union(geometry), .groups = "drop")
-
-map_municipios_2019_ext <- map_municipios %>%
-  left_join(mun_data_2019_ext, by = c("name" = "Municipios"))
-map_municipios_2019_ext <- map_municipios_2019_ext %>%
-  group_by(ine.prov.name) %>%
-  mutate(Total = mean(Total, na.rm = TRUE)) %>%
-  group_by(ine.prov.name, Total) %>%
-  summarise(geometry = st_union(geometry), .groups = "drop")
-
-m5 <- map_municipios_2010_ext %>% pull(Total) %>% min(na.rm = TRUE)
-m6 <- map_municipios_2019_ext %>% pull(Total) %>% min(na.rm = TRUE)
-min_value_act <- min(m5, m6)
-m7 <- map_municipios_2010_ext %>% pull(Total) %>% max(na.rm = TRUE)
-m8 <- map_municipios_2019_ext %>% pull(Total) %>% max(na.rm = TRUE)
-max_value_act <- max(m7, m8)
-
-
-g3 <- ggplot(data = map_municipios_2010_ext) +
-  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
-  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value_act, max_value_act), direction = -1) +  # Escala de color
-  theme_minimal() +
-  labs(title = "Emp_Servicios",
-       subtitle = "Año 2021",
-       fill = "Porcentaje")
-
-
-grid.arrange(g1, g2, g3, nrow=1, ncol=3)
-
-```
-
-
 
 # Anexo 1 {#Anexo}
 
