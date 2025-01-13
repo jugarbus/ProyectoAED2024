@@ -22,8 +22,9 @@ authorcitation: |
 # document options
 journal: Universitat de València
 type: article
-abstract: |
-  El presente artículo es un proyecto de la Asignatura Análisis Exploratorio de Datos, en el que se realiza un análisis exploratorio del conjunto de datos de Indicadores Urbanos, publicado por el Instituto Nacional de Estadística. A lo largo del mismo se plantean y responden preguntas de interés sobre aspectos demográficos, económicos y sociales de España en los últimos 15 años. 
+status: submit
+#abstract: |
+#  El presente artículo consiste en un proyecto de la asignatura *Análisis Exploratorio de Datos*, en el que se realiza un análisis exploratorio del conjunto de datos de Indicadores Urbanos, publicado por el Instituto Nacional de Estadística (INE). Dicho conjunto de datos está compuesto por 3 subconjuntos de indicadores de distinto ámbito, siendo estos indicadores demográficos, indicadores sociales e indicadores económicos. A lo largo del mismo se plantean y responden preguntas de interés sobre aspectos demográficos, económicos y sociales de España en los últimos 15 años.
 # back matter
 keywords: |
   Indicadores Urbanos; Tasa ; Población, Análisis Exploratorio
@@ -57,7 +58,9 @@ knitr::opts_chunk$set(echo = FALSE, warning=FALSE, out.width = '100%', fig.align
 
 # Introducción
 
-Hablar de los 3 datasets y de donde se han obtenido. BLABLABLA
+El presente artículo consiste en un proyecto de la asignatura *Análisis Exploratorio de Datos*, en el que se realiza un análisis exploratorio del conjunto de datos de Indicadores Urbanos, publicado por el Instituto Nacional de Estadística (INE). Dicho conjunto de datos está compuesto por 3 subconjuntos de indicadores de distinto ámbito, siendo estos indicadores demográficos, indicadores sociales e indicadores económicos. A lo largo del mismo se plantean y responden preguntas de interés sobre aspectos demográficos, económicos y sociales de España en los últimos 15 años.
+
+El análisis comienza con la importación y concatenación de los subconjuntos de datos, seguido de un estudio previo de la estructura del *dataset* así como de sus peculiaridades. A continuación, se lleva a cabo la imputación de los valores faltantes y se procede con el análisis univariante y el análisis bivariante. "Debido a que los datos tienen una componente geográfica, el municipio al que pertenece indicador calculado, se procede a la generación de mapas mediante los cuales poder observar la evolución de los distintos indicadores a lo largo del tiempo. Finalmente, se responden a las preguntas planteadas empleando los análisis realizados previamente y se extraen las conclusiones del proyecto.
 
 
 
@@ -252,7 +255,7 @@ Además, no se encontraron observaciones duplicadas a lo largo del dataset compl
 A continuación se van a estudiar estos valores faltantes en función del resto variables no numéricas.
 
 
-#### Por *Sexo*
+### Por *Sexo*
 
 
 ```{r include=FALSE}
@@ -348,7 +351,7 @@ Como se observa en la Tabla \ref{total_sex_na} y Tabla \ref{mun_sex_na}, tanto p
 ```
 
 
-#### Por *Indicadores*, *Periodo* y *Municipios*
+### Por *Indicadores*, *Periodo* y *Municipios*
 
 ```{r}
 nombres_originales <- unique(total_df_nosex$Indicadores)
@@ -630,7 +633,7 @@ kable(p_mun, caption = "Porcentajes de NAs por municipios\\label{mun_na_post}")
 Destacar también que se estudió la existencia de observaciones duplicadas, obteniendo ausencia de estas.
 
 
-#### Imputación
+## Imputación
 
 
 
@@ -733,7 +736,7 @@ Para el dataset por municipios se calcularon tanto la media como la mediana de T
 
 
 
-## Análisis Univariante
+# Análisis Univariante
 
 ```{r}
 # mun_univ DATAFRAME TOTAL NACIONAL LIMPIO
@@ -744,7 +747,7 @@ total_univ <- total_data %>% select(-Indicadores) %>% rename(Indicadores = Ind) 
 
 ```
 
-### Características generales
+## Características generales
 
 En esta sección se lleva a cabo un análisis preeliminar de los dos datasets que van a ser estudiados, prestando especial atención a las posibles anomalías, como datos inconsistentes u outliers.
 
@@ -817,7 +820,7 @@ summary(mun_wide[-c(1,2)])
 
 ```
 
-### Exploración visual
+## Exploración visual
 
 Para buscar valores anómalos se decide graficar los indicadores en boxplots (Figuras \ref{fig:boxplot1} y \ref{fig:boxplot2}). 
 
@@ -1019,7 +1022,7 @@ grid.arrange(grafico_dem, grafico_empleo, ncol = 2)
 
 
 
-### Estadísticos descriptivos
+## Estadísticos descriptivos
 
 Una vez eliminado e imputado el dato anómalo encontrado, se vuelven a calcular los estadisticos descriptivos de las variables numéricas, es decir, de todos los indicadores de ambos datasets. Las tablas con los estadísticos descriptivos del dataset por municipios y del dataset total se muestran en las tablas \ref{tabla:anexo1_1} y \ref{tabla:anexo1_2} del Anexo 1.
 
@@ -1092,11 +1095,11 @@ anexo1_2 <- kable(estadisticos,
 
 ```
 
-## Análisis bivariante
+# Análisis bivariante
 
 En este apartado se estudian las relaciones entre pares de variables para cada uno de los conjuntos de datos disponibles (por municipio y Total Nacional).
 
-### Datos por municipio
+## Datos por municipio
 
 En este caso, se obtiene la matriz de correlaciones para proceder al estudio, puesto que nos encontramos con variables de tipo numérico.
 
@@ -1179,7 +1182,7 @@ high_corr_spearman <- high_corr_spearman[order(-abs(high_corr_spearman$Freq)), ]
 
 En la figura \ref{fig:matriz_correlaciones_municipios} se pueden observar las matrices de correlaciones utilizando la correlación de Pearson y la correlación de Spearman, con el fin de observar tanto relaciones lineales como no lineales. Dado que no se aprecia una diferencia significativa entre las matrices, se puede inferir que las relaciones entre las variables son probablemente lineales o no lineales monótonas.
 
-```{r diagramas_dispersion, fig.width=15, fig.height=15, fig.cap= "\\label{fig:diagramas_dispersion}Diagramas de dispersión para los datos por municipios.", message=FALSE}
+```{r diagramas_dispersion, fig.width=15, fig.height=10, fig.cap= "\\label{fig:diagramas_dispersion}Diagramas de dispersión para los datos por municipios.", message=FALSE}
 
 # Crear diagramas de dispersión
 corr1 <- ggplot(wide_mun_data, aes(x = Tasa_Actividad, y = Pob_15_64)) +
@@ -1265,7 +1268,7 @@ Por contra, también se observan correlaciones negativas fuertes como, por ejemp
 
 Una observación interesante es que la tasa de desempleo (*Tasa_Desempleo*) no muestra correlaciones fuertes ($|corr| > 0.6$) con variables de población como la proporción de población en edades económicamente activas (*Pob_15_64*), en la figura \ref{fig:diagramas_dispersion}.e; o la población total (*Pob_Res*) en la figura \ref{fig:diagramas_dispersion}.f, lo que puede sugerir que el desempleo no está directamente influido por características demográficas en el contexto estudiado.
 
-### Datos totales
+## Datos totales
 
 Al igual que en el apartado anterior, se obtiene la matriz de correlaciones para proceder al estudio, puesto que nos encontramos con variables de tipo numérico.
 
