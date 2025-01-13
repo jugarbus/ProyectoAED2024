@@ -15,9 +15,9 @@ affiliation:
       Universitat de València -
       ETSE-UV, Avinguda de l'Universitat, 46100 Burjassot, Valencia
 correspondence: |
-  etse@uv.es; Tel.: +34-963-54-3211.
+  {recombar, adioros, gaia2, jugarbus\}\@alumni.uv.es
 authorcitation: |
-  Company, R.; Dionis, A.; Ivars, G.; Garcia, J.
+  Company, R.; Dionis-Ros, A.; Ivars, G.; Garcia, J.
   
 # document options
 journal: Universitat de València
@@ -69,7 +69,7 @@ Asimismo, se busca responder a las siguientes preguntas clave a partir de los da
 
 * ¿Reflejan los datos algunos de los eventos más significativos en España, como la crisis económica de 2008-2014 o la pandemia de COVID-19 en 2019?
 
-* ¿Que podemos deducir sobre la situación demográfica de España a partir de estos datos?
+* ¿Qué podemos deducir sobre la situación demográfica de España a partir de estos datos?
 
 # Análisis exploratorio de los datos
 
@@ -180,7 +180,7 @@ Antes de importar, primero se verificó que la codificación de los tres dataset
 
 - *Municipios* : Municipio del que se han obtenido los datos.
 
-- *Indicadores* : Tipo de estadístico demográfico, económico o social que se está calculando en cada observación. Se comentarán mas a fondo en los hallazgos obtenidos, ya que se trata de un elevado número de indicadores (35 niveles).
+- *Indicadores* : Tipo de estadístico demográfico, económico o social que se está calculando en cada observación. Se comentarán más a fondo en los hallazgos obtenidos, ya que se trata de un elevado número de indicadores (35 niveles).
 
 - *Sexo* : Sexo del cual se está obteniendo el indicador estadístico (hombre o mujer).
 
@@ -190,7 +190,7 @@ Antes de importar, primero se verificó que la codificación de los tres dataset
 
 
 
-Otras consideraciones que se tuvieron en cuenta fué que la variable *Total* del dataset social era de tipo "character" y se transformó a tipo "numeric" para poder realizar operaciones. Esto se debe a que esta columna contenía valores "..", que serán considerados como faltantes en nuestro análisis. Al importar estos valores, R determinó que la clase de esta variable era de tipo "character". Además, se transformó la variable *Periodo* a tipo "Date" y la variable *Sexo* a "factor".
+Otras consideraciones que se tuvieron en cuenta fueron que la variable *Total* del dataset social era de tipo "character" y se transformó a tipo "numeric" para poder realizar operaciones. Esto se debe a que esta columna contenía valores "..", que serán considerados como faltantes en nuestro análisis. Al importar estos valores, R determinó que la clase de esta variable era de tipo "character". Además, se transformó la variable *Periodo* a tipo "Date" y la variable *Sexo* a "factor".
 
 
 Posteriormente se concatenaron los tres datasets ya que estaban en formato "tidy". y finalmente, el dataset se separó en cuatro partes:
@@ -333,7 +333,7 @@ kable(n_na_sex_2, caption = "Porcentajes de NAs por sexo en el dataset por munic
 
 
 
-Como se observa en la Tabla \ref{total_sex_na} y Tabla \ref{mun_sex_na}, tanto para hombres como para mujeres, aproximadamente el 85% de sus observaciones tienen valores faltantes en la columna *Total*, lo que representa mas o menos el 28% del total de observaciones en ambos conjuntos de datos. Para el nivel Total (variable *Sexo*), en torno al 40% de sus observaciones tienen valores faltantes, representando el 14% aproximandamente del total de observaciones en ambos dataframes. Por tanto, debido al elevado porcentaje de valores faltantes en las observaciones desglosadas por sexo,se decidió no incluir en el análisis observaciones de hombres y mujeres por separado y optamos por trabajar únicamente con el total combinado de ambos sexos. Por tanto, a partir de esta decisión se continuó con el análisis de estos dos conjuntos de datos:
+Como se observa en la Tabla \ref{total_sex_na} y Tabla \ref{mun_sex_na}, tanto para hombres como para mujeres, aproximadamente el 85% de sus observaciones tienen valores faltantes en la columna *Total*, lo que representa mas o menos el 28% del total de observaciones en ambos conjuntos de datos. Para el nivel Total (variable *Sexo*), en torno al 40% de sus observaciones tienen valores faltantes, representando el 14% aproximandamente del total de observaciones en ambos dataframes. Por tanto, debido al elevado porcentaje de valores faltantes en las observaciones desglosadas por sexo, se decidió no incluir en el análisis observaciones de hombres y mujeres por separado y optamos por trabajar únicamente con el total combinado de ambos sexos. Por tanto, a partir de esta decisión se continuó con el análisis de estos dos conjuntos de datos:
 
 - Datos totales nacionales con *Sexo* = "Total".
 
@@ -475,7 +475,7 @@ clean_mun_df <- total_df_nosex %>% filter(Municipios!='Total Nacional') %>%
 
 
 
-En ambos conjuntos de datos, la distribución de los valores faltantes variaba entre los diferentes niveles de las variables, alejándose considerablemente de una distribución uniforme. Como criterio, se eliminaron aquellos niveles de variables que tenían más del 50% de valores faltantes realtivo al número de observaciones de cada nivel.
+En ambos conjuntos de datos, la distribución de los valores faltantes variaba entre los diferentes niveles de las variables, alejándose considerablemente de una distribución uniforme. Como criterio, se eliminaron aquellos niveles de variables que tenían más del 50% de valores faltantes relativo al número de observaciones de cada nivel.
 
 Para el caso de la variable *Indicadores*, se eliminaron  14 y 15 indicadores del conjunto de datos nacional y del de municipios, respectivamente.
 
@@ -957,7 +957,7 @@ total_data <- total_data %>%
   
 Como parte del análisis univariante, también se lleva a cabo un estudio sobre las distribuciones de los diferentes indicadores a lo largo del tiempo. Para este análisis, se utiliza exclusivamente el dataset de Total Nacional, para obtener una visión general de todo el país y se destacan algunos puntos interesantes:
 
-* Indicadores demográficos (Tabla \ref{fig:tiempo} izquierda) : Los datos muestran claramente una tendencia al envejecimiento de la población. Esto se ve reflejado de forma direca en el aumento de la edad media, pero también en otros indicadores. A lo largo de los años, la proporción de población de 0 a 14 años disminuye de forma notable, mientras que aumentan las proporciones de población de 15 a 64 años y de más de 64 años. Esto se ve, reforzado por un descenso de la Tasa de Natalidad (con un pequeño repunte en los últimos años.
+* Indicadores demográficos (Tabla \ref{fig:tiempo} izquierda) : Los datos muestran claramente una tendencia al envejecimiento de la población. Esto se ve reflejado de forma direca en el aumento de la edad media, pero también en otros indicadores. A lo largo de los años, la proporción de población de 0 a 14 años disminuye de forma notable, mientras que aumentan las proporciones de población de 15 a 64 años y de más de 64 años. Esto se ve, reforzado por un descenso de la Tasa de Natalidad (con un pequeño repunte en los últimos años).
 
 * Indicadores económicos (Tabla \ref{fig:tiempo} derecha) : En cuanto a los indicadores económicos, se destacan los relacionados con el empleo. Como era de esperar, la Tasa de Desempleo y la Tasa de Ocupados (de 20 a 64 años) siguen tendencias opuestas con el paso de los años. Durante el periodo analizado, se aprecia una fase de recesión laboral hasta 2013, y tras el final de la crisis de la burbuja inmobiliaria (2008-2014), mejoran las tasas de desempleo y de ocupación, aunque sufren un pequeño descenso en 2019.
 
@@ -1013,7 +1013,7 @@ grafico_empleo <- ggplot(total_univ_empleo, aes(x = Periodo, y = Total, color = 
 
 ```
 
-```{r tiempo, out.width= "100%", fig.cap="Estudio de los Indicadores respecto al PEriodo"}
+```{r tiempo, out.width= "100%", fig.cap="Estudio de los Indicadores respecto al Periodo"}
 grid.arrange(grafico_dem, grafico_empleo, ncol = 2)
 ```
 
@@ -1094,12 +1094,314 @@ anexo1_2 <- kable(estadisticos,
 
 ## Análisis bivariante
 
-```{r}
+En este apartado se estudian las relaciones entre pares de variables para cada uno de los conjuntos de datos disponibles (por municipio y Total Nacional).
+
+### Datos por municipio
+
+En este caso, se obtiene la matriz de correlaciones para proceder al estudio, puesto que nos encontramos con variables de tipo numérico.
+
+
+```{r matriz_correlaciones_municipios, fig.width=20, fig.height=10, fig.cap="\\label{fig:matriz_correlaciones_municipios}Matrices de correlación para los datos por municipios.", echo=FALSE}
+
+# , fig.width=4.5, fig.height=2.5, fig.align='left', fig.cap="\\label{fig:estaciones_activas}"
+
 # mun_data  DATAFRAME POR MUNICIPIOS LIMPIO
-# total_data DATAFRAME TOTAL NACIONAL LIMPIO
+# Pivotamos a formato ancho para simplificar el analisis
+wide_mun_data <- mun_data %>% pivot_wider(names_from=Ind, values_from=Total)
+wide_mun_data$Periodo <- as.factor(format(wide_mun_data$Periodo, "%Y"))
+
+## Calculamos la matriz de correlacion
+# Seleccionamos solo las columnas numericas
+numeric_data <- wide_mun_data[, sapply(wide_mun_data, is.numeric)]
+
+# Calcular matriz de correlación
+cor_matrix <- cor(numeric_data)
+cor_matrix_spearman <- cor(numeric_data, method = "spearman")
+
+## Visualización con corrplot
+par(mfrow = c(1,2), mar = c(0.5, 0.5, 5, 0.5), oma = c(0, 2, 0, 2))  # Márgenes pequeños
+corrplot(cor_matrix,
+         method = "color",
+         type = "lower",
+         tl.cex = 1.5,           # Tamaño de etiquetas
+         cl.cex = 1.5,             # Tamaño barra de colores
+         addgrid.col = NA,       # Sin líneas de rejilla
+         tl.col = "black",
+         mar = c(0, 0, 1, 0))    # Eliminar márgenes adicionales
+title("(a) Matriz de correlaciones usando Pearson", cex.main = 2)
+
+corrplot(cor_matrix_spearman,
+         method = "color",
+         type = "lower",
+         tl.cex = 1.5,           # Tamaño de etiquetas
+         cl.cex = 1.5,             # Tamaño barra de colores
+         addgrid.col = NA,       # Sin líneas de rejilla
+         tl.col = "black",
+         mar = c(0, 0, 1, 0))    # Eliminar márgenes adicionales
+title("(b) Matriz de correlaciones usando Spearman", cex.main = 2)
+
+# # Generar gráficos de dispersión para todos los pares
+# ggpairs(numeric_data,
+#         title = "Diagramas de dispersión y correlación entre indicadores",
+#         progress = TRUE)
+# 
+# ggpairs_plot <- ggpairs(numeric_data, progress = TRUE)
+# ggsave("scatterplot_matrix.png", plot = ggpairs_plot, width = 50, height = 50, limitsize = F)
+
+# Convertir matriz de correlación a formato largo
+cor_long <- as.data.frame(as.table(cor_matrix))
+
+# Filtrar correlaciones significativas (|r| > 0.6)
+high_corr <- cor_long[abs(cor_long$Freq) > 0.6 & cor_long$Var1 != cor_long$Var2, ]
+
+# Eliminar duplicados manteniendo solo una de las combinaciones
+high_corr <- high_corr[!duplicated(t(apply(high_corr[, c("Var1", "Var2")], 1, sort))), ]
+
+# Ordenar por magnitud de la correlación
+high_corr <- high_corr[order(-abs(high_corr$Freq)), ]
+
+# Convertir matriz de correlación a formato largo
+cor_long_spearman <- as.data.frame(as.table(cor_matrix_spearman))
+
+# Filtrar correlaciones significativas (|r| > 0.6)
+high_corr_spearman <- cor_long_spearman[abs(cor_long_spearman$Freq) > 0.6 & cor_long_spearman$Var1 != cor_long_spearman$Var2, ]
+
+# Eliminar duplicados manteniendo solo una de las combinaciones
+high_corr_spearman <- high_corr_spearman[!duplicated(t(apply(high_corr_spearman[, c("Var1", "Var2")], 1, sort))), ]
+
+# Ordenar por magnitud de la correlación
+high_corr_spearman <- high_corr_spearman[order(-abs(high_corr_spearman$Freq)), ]
+
+
+# anti_join(high_corr, high_corr_spearman, by = c("Var1", "Var2"))
+# inner_join(high_corr, high_corr_spearman, by = c("Var1", "Var2"))
 ```
 
-En el Anexo 1, en la Tabla \ref{tabla:anexo1}
+En la figura \ref{fig:matriz_correlaciones_municipios} se pueden observar las matrices de correlaciones utilizando la correlación de Pearson y la correlación de Spearman, con el fin de observar tanto relaciones lineales como no lineales. Dado que no se aprecia una diferencia significativa entre las matrices, se puede inferir que las relaciones entre las variables son probablemente lineales o no lineales monótonas.
+
+```{r diagramas_dispersion, fig.width=15, fig.height=15, fig.cap= "\\label{fig:diagramas_dispersion}Diagramas de dispersión para los datos por municipios.", message=FALSE}
+
+# Crear diagramas de dispersión
+corr1 <- ggplot(wide_mun_data, aes(x = Tasa_Actividad, y = Pob_15_64)) +
+  geom_point(color = "cornflowerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", formula = y ~ x) +  # Línea de tendencia lineal para cada año
+  theme_minimal(base_size = 15) +
+  labs(
+    title = "(a) Tasa_Actividad vs. Pob_15_64",
+    x = "Tasa_Actividad",
+    y = "Pob_15_64",
+    caption = paste("Coeficiente de correlación:", round(high_corr$Freq[high_corr$Var1 == "Tasa_Actividad" & high_corr$Var2 == "Pob_15_64"], 2))
+) + theme(legend.position = "none")
+
+
+corr2 <- ggplot(wide_mun_data, aes(x = Edad_Med, y = Pob_65mas)) +
+  geom_point(color = "cornflowerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", formula = y ~ x) +  # Línea de tendencia lineal para cada año
+  theme_minimal(base_size = 15) +
+  labs(
+    title = "(b) Edad_Med vs. Pob_65mas",
+    x = "Edad_Med",
+    y = "Pob_65mas",
+    caption = paste("Coeficiente de correlación:", round(high_corr$Freq[high_corr$Var1 == "Edad_Med" & high_corr$Var2 == "Pob_65mas"], 2))
+) + theme(legend.position = "none")
+
+
+corr3 <- ggplot(wide_mun_data, aes(x = Ocup_20_64, y = Tasa_Desempleo)) +
+  geom_point(color = "cornflowerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", formula = y ~ x) +  # Línea de tendencia lineal para cada año
+  theme_minimal(base_size = 15) +
+  labs(
+    title = "(c) Ocup_20_64 vs. Tasa_Desempleo",
+    x = "Ocup_20_64",
+    y = "Tasa_Desempleo",
+    caption = paste("Coeficiente de correlación:", round(high_corr$Freq[high_corr$Var1 == "Ocup_20_64" & high_corr$Var2 == "Tasa_Desempleo"], 2))
+) + theme(legend.position = "none")
+
+
+corr4 <- ggplot(wide_mun_data, aes(x = Tasa_Mortalidad, y = Tasa_Natalidad)) +
+  geom_point(color = "cornflowerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", formula = y ~ x) +  # Línea de tendencia lineal para cada año
+  theme_minimal(base_size = 15) +
+  labs(
+    title = "(d) Tasa_Mortalidad vs. Tasa_Natalidad",
+    x = "Tasa_Mortalidad",
+    y = "Tasa_Natalidad",
+    caption = paste("Coeficiente de correlación:", round(high_corr$Freq[high_corr$Var1 == "Tasa_Mortalidad" & high_corr$Var2 == "Tasa_Natalidad"], 2))
+) + theme(legend.position = "none")
+
+
+corr5 <- ggplot(wide_mun_data, aes(x = Tasa_Desempleo, y = Pob_15_64)) +
+  geom_point(color = "cornflowerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", formula = y ~ x) +  # Línea de tendencia lineal para cada año
+  theme_minimal(base_size = 15) +
+  labs(
+    title = "(e) Tasa_Desempleo vs. Pob_15_64",
+    x = "Tasa_Desempleo",
+    y = "Pob_15_64",
+    caption = paste("Coeficiente de correlación:", round(cor_long$Freq[cor_long$Var1 == "Tasa_Desempleo" & cor_long$Var2 == "Pob_15_64"], 2))
+) + theme(legend.position = "none")
+
+
+corr6 <- ggplot(wide_mun_data, aes(x = Tasa_Desempleo, y = Pob_Res)) +
+  geom_point(color = "cornflowerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", formula = y ~ x) +  # Línea de tendencia lineal para cada año
+  theme_minimal(base_size = 15) +
+  labs(
+    title = "(f) Tasa_Desempleo vs. Pob_Res",
+    x = "Tasa_Desempleo",
+    y = "Pob_Res",
+    caption = paste("Coeficiente de correlación:", round(cor_long$Freq[cor_long$Var1 == "Tasa_Desempleo" & cor_long$Var2 == "Pob_Res"], 2))
+) + theme(legend.position = "none")
+
+
+ggarrange(corr1, corr2, corr3, NULL,NULL,NULL, corr4, corr5, corr6, nrow = 3, ncol = 3, heights = c(1, 0.05, 1))
+```
+
+Mediante gráficos de dispersión se comprueban algunas de las relaciones fuertes de las variables presentes en el conjunto. En este caso se consideran como fuertes aquellas relaciones cuyo coeficiente de correlación sea mayor a 0.6 en valor absoluto.
+
+Algunas correlaciones positivas fuertes que destacan pueden ser la relación entre el porcentaje de población en edades económicamente activas (*Pob_15_64*) y la tasa de actividad (*Tasa_Actividad*), en la figura \ref{fig:diagramas_dispersion}.a); o la relación entre el porcentaje de población mayor de 65 años (*Pob_65mas*) y la edad media (*Edad_Med*) en la figura \ref{fig:diagramas_dispersion}.b, lo que puede reflejar una relación directa entre envejecimiento de la población y la proporción de adultos mayores de 65 años.
+
+Por contra, también se observan correlaciones negativas fuertes como, por ejemplo, la relación entre la proporción de ocupados entre 20-64 años (*Ocup_20_64*) y la tasa de desempleo (*Tasa_Desempleo*) en la figura \ref{fig:diagramas_dispersion}.c, que refleja las dinámicas entre empleo y desempleo dentro del mercado laboral; o la relación entre la tasa de mortalidad (*Tasa_Mortalidad*) y la tasa de natalidad (*Tasa_Natalidad*) en la figura \ref{fig:diagramas_dispersion}.d, que puede sugerir dinámicas demográficas compensatorias en la población.
+
+Una observación interesante es que la tasa de desempleo (*Tasa_Desempleo*) no muestra correlaciones fuertes ($|corr| > 0.6$) con variables de población como la proporción de población en edades económicamente activas (*Pob_15_64*), en la figura \ref{fig:diagramas_dispersion}.e; o la población total (*Pob_Res*) en la figura \ref{fig:diagramas_dispersion}.f, lo que puede sugerir que el desempleo no está directamente influido por características demográficas en el contexto estudiado.
+
+### Datos totales
+
+Al igual que en el apartado anterior, se obtiene la matriz de correlaciones para proceder al estudio, puesto que nos encontramos con variables de tipo numérico.
+
+```{r matriz_correlaciones_totales, fig.width=20, fig.height=10, fig.cap="\\label{fig:matriz_correlaciones_totales}Matrices de correlación para los datos totales.", echo=FALSE}
+### total_data DATAFRAME TOTAL NACIONAL LIMPIO
+# Pivotamos a formato ancho para simplificar el analisis
+wide_total_data <- total_data %>% select(-Indicadores)
+wide_total_data <- wide_total_data %>% pivot_wider(names_from=Ind, values_from=Total)
+wide_total_data$Periodo <- as.factor(format(wide_total_data$Periodo, "%Y"))
+
+## Calculamos la matriz de correlacion
+# Seleccionamos solo las columnas numericas
+numeric_data_total <- wide_total_data[, sapply(wide_total_data, is.numeric)]
+
+# Calcular matriz de correlación
+cor_matrix_total <- cor(numeric_data_total)
+cor_matrix_total_spearman <- cor(numeric_data_total, method = "spearman")
+
+## Visualización con corrplot
+par(mfrow = c(1,2), mar = c(0.5, 0.5, 5, 0.5), oma = c(0, 2, 0, 2))  # Márgenes pequeños
+corrplot(cor_matrix_total,
+         method = "color",
+         type = "lower",
+         tl.cex = 1.5,           # Tamaño de etiquetas
+         cl.cex = 1.5,             # Tamaño barra de colores
+         addgrid.col = NA,       # Sin líneas de rejilla
+         tl.col = "black",
+         mar = c(0, 0, 1, 0))    # Eliminar márgenes adicionales
+title("(a) Matriz de correlaciones usando Pearson", cex.main = 2)
+
+corrplot(cor_matrix_total_spearman,
+         method = "color",
+         type = "lower",
+         tl.cex = 1.5,           # Tamaño de etiquetas
+         cl.cex = 1.5,             # Tamaño barra de colores
+         addgrid.col = NA,       # Sin líneas de rejilla
+         tl.col = "black",
+         mar = c(0, 0, 1, 0))    # Eliminar márgenes adicionales
+title("(b) Matriz de correlaciones usando Spearman", cex.main = 2)
+
+# # Generar gráficos de dispersión para todos los pares
+# ggpairs(numeric_data_total,
+#         title = "Diagramas de dispersión y correlación entre indicadores",
+#         progress = TRUE)
+# 
+# ggpairs_plot <- ggpairs(numeric_data_total, progress = TRUE)
+# ggsave("scatterplot_matrix_total.png", plot = ggpairs_plot, width = 50, height = 50, limitsize = F)
+
+# Convertir matriz de correlación a formato largo
+cor_long_total <- as.data.frame(as.table(cor_matrix_total))
+
+# Filtrar correlaciones significativas (|r| > 0.6)
+high_corr_total <- cor_long_total[abs(cor_long_total$Freq) > 0.6 & cor_long_total$Var1 != cor_long_total$Var2, ]
+
+# Eliminar duplicados manteniendo solo una de las combinaciones
+high_corr_total <- high_corr_total[!duplicated(t(apply(high_corr_total[, c("Var1", "Var2")], 1, sort))), ]
+
+# Ordenar por magnitud de la correlación
+high_corr_total <- high_corr_total[order(-abs(high_corr_total$Freq)), ]
+
+# Convertir matriz de correlación a formato largo
+cor_long_total_spearman <- as.data.frame(as.table(cor_matrix_total_spearman))
+
+# Filtrar correlaciones significativas (|r| > 0.6)
+high_corr_total_spearman <- cor_long_total_spearman[abs(cor_long_total_spearman$Freq) > 0.6 & cor_long_total_spearman$Var1 != cor_long_total_spearman$Var2, ]
+
+# Eliminar duplicados manteniendo solo una de las combinaciones
+high_corr_total_spearman <- high_corr_total_spearman[!duplicated(t(apply(high_corr_total_spearman[, c("Var1", "Var2")], 1, sort))), ]
+
+# Ordenar por magnitud de la correlación
+high_corr_total_spearman <- high_corr_total_spearman[order(-abs(high_corr_total_spearman$Freq)), ]
+
+
+# anti_join(high_corr_total, high_corr_total_spearman, by = c("Var1", "Var2"))
+# inner_join(high_corr_total, high_corr_total_spearman, by = c("Var1", "Var2"))
+```
+
+En la figura \ref{fig:matriz_correlaciones_totales} se puede observar la matriz de correlaciones utilizando la correlación de Pearson y la correlación de Spearman, con el fin de observar tanto relaciones lineales como no lineales. En este caso, se identifican discrepancias entre ambas matrices, lo que podría sugerir la existencia de relaciones no lineales entre algunos de los indicadores.
+
+```{r diagramas_dispersion_totales, fig.width=10, fig.height=10, fig.cap= "\\label{fig:diagramas_dispersion_totales}Diagramas de dispersión para los datos totales.", message=FALSE}
+# Crear diagramas de dispersión
+corr1 <- ggplot(wide_total_data, aes(x = Tasa_Actividad, y = Pob_15_64)) +
+  geom_point(color = "cornflowerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", formula = y ~ x) +  # Línea de tendencia lineal para cada año
+  theme_minimal(base_size = 15) +
+  labs(
+    title = "(a) Tasa_Actividad vs. Pob_15_64",
+    x = "Tasa_Actividad",
+    y = "Pob_15_64",
+    caption = paste("Coeficiente de correlación:", round(high_corr_total$Freq[high_corr_total$Var1 == "Tasa_Actividad" & high_corr_total$Var2 == "Pob_15_64"], 2))
+) + theme(legend.position = "none")
+
+
+corr2 <- ggplot(wide_total_data, aes(x = Tasa_Actividad, y = Tasa_Natalidad)) +
+  geom_point(color = "cornflowerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", formula = y ~ x) +  # Línea de tendencia lineal para cada año
+  theme_minimal(base_size = 15) +
+  labs(
+    title = "(b) Tasa_Actividad vs. Tasa_Natalidad",
+    x = "Tasa_Actividad",
+    y = "Tasa_Natalidad",
+    caption = paste("Coeficiente de correlación:", round(high_corr_total$Freq[high_corr_total$Var1 == "Tasa_Actividad" & high_corr_total$Var2 == "Tasa_Natalidad"], 2))
+) + theme(legend.position = "none")
+
+
+corr3 <- ggplot(wide_total_data, aes(x = Tasa_Actividad, y = Edad_Med)) +
+  geom_point(color = "cornflowerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", formula = y ~ x) +  # Línea de tendencia lineal para cada año
+  theme_minimal(base_size = 15) +
+  labs(
+    title = "(c) Tasa_Actividad vs. Edad_Med",
+    x = "Tasa_Actividad",
+    y = "Edad_Med",
+    caption = paste("Coeficiente de correlación:", round(high_corr_total$Freq[high_corr_total$Var1 == "Tasa_Actividad" & high_corr_total$Var2 == "Edad_Med"], 2))
+) + theme(legend.position = "none")
+
+
+corr4 <- ggplot(wide_total_data, aes(x = Hog_1P, y = Pob_15_64)) +
+  geom_point(color = "cornflowerblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", formula = y ~ x) +  # Línea de tendencia lineal para cada año
+  theme_minimal(base_size = 15) +
+  labs(
+    title = "(d) Hog_1P vs. Pob_15_64",
+    x = "Hog_1P",
+    y = "Pob_15_64",
+    caption = paste("Coeficiente de correlación:", round(high_corr_total$Freq[high_corr_total$Var1 == "Hog_1P" & high_corr_total$Var2 == "Pob_15_64"], 2))
+) + theme(legend.position = "none")
+
+ggarrange(corr1, corr2, NULL,NULL, corr3, corr4, nrow = 3, ncol = 2, heights = c(1, 0.05, 1))
+```
+
+Mediante gráficos de dispersión se comprueban algunas de las relaciones fuertes de las variables presentes en el conjunto. En este caso se consideran como fuertes aquellas relaciones cuyo coeficiente de correlación sea mayor a 0.6 en valor absoluto.
+
+Algunas correlaciones positivas fuertes que destacan pueden ser la relación entre la proporción de población en edades económicamente activas (*Pob_15_64*) y la tasa de actividad (*Tasa_Actividad*), en la figura \ref{fig:diagramas_dispersion_totales}.a, lo que refleja que la actividad laboral es impulsada por personas en edad de trabajar; o la relación entre la tasa de natalidad (*Tasa_Natalidad*) y la tasa de actividad (*Tasa_Actividad*) en la figura \ref{fig:diagramas_dispersion_totales}.b, lo que puede reflejar la existencia de políticas de apoyo a la natalidad en el ámbito laboral. Podría reflejar también que la mejora de las condiciones de vida facilita la formación de una familia.
+
+Por contra, también se observan correlaciones negativas fuertes como, por ejemplo, la relación entre la tasa de actividad (*Tasa_Actividad*) y la edad media de la población (*Edad_Med*) en la figura \ref{fig:diagramas_dispersion_totales}.c. Esta relación refleja que, a medida que la población envejece, aumenta la proporción de personas fuera del mercado laboral, lo que reduce la tasa de actividad. Además, una mayor edad media puede reflejar una menor incorporación de jóvenes al mercado laboral; Otra correlación negativa fuerte es la relación entre la proporción de hogares unipersonales (*Hog_1P*) y la proporción de población en edades económicamente activas (*Pob_15_64*) en la figura \ref{fig:diagramas_dispersion_totales}.d. Esta relación puede sugerir que, a medida que disminuye la población activa, aumenta la proporción de personas mayores que viven solas, lo que refleja el envejecimiento poblacional y los cambios en la estructura familiar, donde las personas mayores tienden a vivir solas.
 
 # Anexo 1 {#Anexo}
 
