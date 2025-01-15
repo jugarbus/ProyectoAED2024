@@ -1085,7 +1085,7 @@ for (i in 1:ncol(numericas)) {
 }
 
 anexo1_2 <- kable(estadisticos, 
-             digits = 2, 
+             digits = 1, 
              caption = "Estadísticos Dataset Total Nacional\\label{tabla:anexo1_2}")
 
 ```
