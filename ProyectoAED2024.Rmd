@@ -33,13 +33,13 @@ authorcontributions: |
 dataavailability: |
   Los conjuntos de datos analizados en el presente artículo están disponibles en la sección "Indicadores Urbanos. Últimos datos." del repositorio público de conjuntos de datos abiertos del Instituto Nacional de Estadística INEbase
   \url{https://www.ine.es/dyngs/INEbase/listaoperaciones.htm}.
-conflictsofinterest: |
-  Los autores declaran no tener ningún conflicto de interés
-abbreviations:
-  - short: MDPI
-    long: Multidisciplinary Digital Publishing Institute
-  - short: INE
-    long: Instituto Nacional de Estadística
+#conflictsofinterest: |
+  # Los autores declaran no tener ningún conflicto de interés
+# abbreviations:
+#   - short: MDPI
+#     long: Multidisciplinary Digital Publishing Institute
+#   - short: INE
+#     long: Instituto Nacional de Estadística
 endnotes: false
 output: 
   rticles::mdpi_article:
@@ -74,7 +74,11 @@ Asimismo, se busca responder a las siguientes preguntas clave a partir de los da
 
 * ¿Qué podemos deducir sobre la situación demográfica de España a partir de estos datos?
 
-# Análisis exploratorio de los datos
+* ¿Existen diferencias de indicadores geográficamente?
+
+* ¿Qué indicadores demográficos están correlacionados con la tasa de desempleo?
+
+# Preparación de los datos
 
 
 
@@ -266,7 +270,7 @@ g1 <- full_df %>% filter(Municipios=='Total Nacional') %>%
     geom_bar(stat = "identity", fill = "skyblue") +
     coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
     labs(
-      title = "Conteo NAs por Sexo del dataset total nacional",
+      title = "Conteo NAs por Sexo del dataset total",
       x = "Sexo",
       y = "Cantidad de NA"
     ) +
@@ -308,7 +312,7 @@ n_na_sex$Porcentaje_total <- round(n_na_sex$n / dim(full_df %>% filter(Municipio
 
 
 ```{r}
-kable(n_na_sex, caption = "Porcentajes de NAs por sexo en el dataset Total Nacional\\label{total_sex_na}")
+kable(n_na_sex, caption = "Porcentajes de NAs por sexo en el dataset total\\label{total_sex_na}", col.names = c("Sexo", "Cantidad de NAs", "Porcentaje", "Porcentaje total"))
 
 ```
 
@@ -329,7 +333,7 @@ n_na_sex_2$Porcentaje_total <- round(n_na_sex_2$n / dim(full_df %>% filter(Munic
 
 ```{r}
 
-kable(n_na_sex_2, caption = "Porcentajes de NAs por sexo en el dataset por municipios\\label{mun_sex_na}")
+kable(n_na_sex_2, caption = "Porcentajes de NAs por sexo en el dataset por municipios\\label{mun_sex_na}", col.names = c("Sexo", "Cantidad de NAs", "Porcentaje", "Porcentaje total"))
 
 ```
 
@@ -620,12 +624,12 @@ p_mun <- round(colSums(is.na(df2)) / dim(df2)[1] *100, 2)
 
 
 ```{r}
-kable(p_total, caption = "Porcentajes de NAs conjunto Total Nacional\\label{total_na_post}")
+kable(p_total, caption = "Porcentajes de NAs conjunto total\\label{total_na_post}", col.names = c("Porcentaje"))
 ```
 
 
 ```{r}
-kable(p_mun, caption = "Porcentajes de NAs por municipios\\label{mun_na_post}")
+kable(p_mun, caption = "Porcentajes de NAs por municipios\\label{mun_na_post}", col.names = c("Porcentaje"))
 ```
 
 
@@ -732,7 +736,7 @@ Para la imputación, en primera instancia se optó por imputar ambos datasets me
 
 Como en el análisis parecían existir ciertos patrones de los faltantes con las variables del conjunto de datos, se realizó el test de Little's MCAR, rechazando así la hipótesis nula de que los datos faltantes eran completamente al azar (Missing Completely At Random). Esto confirmó nuestra hipótesis de que podrían depender de las variables observadas (Missing At Random). Tras estos resultados, se empleó la función *mice* con el método 'cart' (Classification and Regression Trees). Este método crea árboles de decisión para predecir los valores faltantes basándose en las relaciones entre las variables observadas. No obstante, tras esta imputación, para algunos municipios e indicadores, los valores faltantes estaban al principio de la serie temporal, sin datos previos disponibles. Por tanto, se imputaron de forma separada, utilizando extrapolación lineal.
 
-Para el dataset por municipios se calcularon tanto la media como la mediana de Total para cada grupo de *Indicadores*. Luego, se compararon estas dos medidas y se observó que, en ciertos indicadores, la diferencia entre la media y la mediana era significativa. Debido a estas discrepancias, se decidió utilizar la mediana para la imputación, ya que es menos sensible a los valores atípicos.
+Para el dataset total se calcularon tanto la media como la mediana de *Total* para cada grupo de *Indicadores*. Luego, se compararon estas dos medidas y se observó que en ciertos indicadores la diferencia entre la media y la mediana era significativa. Debido a estas discrepancias, se decidió utilizar la mediana para la imputación, ya que es menos sensible a los valores atípicos.
 
 
 
@@ -832,7 +836,7 @@ ggplot(mun_univ_transformed, aes(x = Indicadores, y = Total)) +
   geom_boxplot(fill = "skyblue", color = "black") + 
   theme_minimal() +
   labs(
-    title = "Boxplot de los Indicadores por municipios",
+    title = "Boxplot de Indicadores por municipios",
     x = "Indicador",
     y = "Total"
   ) +
@@ -854,7 +858,7 @@ ggplot(total_univ_transformed, aes(x = Indicadores, y = Total)) +
   geom_boxplot(fill = "skyblue", color = "black") + 
   theme_minimal() +
   labs(
-    title = "Boxplot de los Indicadores de Total Nacional",
+    title = "Boxplot de Indicadores de Total Nacional",
     x = "Indicador",
     y = "Total"
   ) +
@@ -955,7 +959,7 @@ total_data <- total_data %>%
   
 Como parte del análisis univariante, también se lleva a cabo un estudio sobre las distribuciones de los diferentes indicadores a lo largo del tiempo. Para este análisis, se utiliza exclusivamente el dataset de Total Nacional, para obtener una visión general de todo el país y se destacan algunos puntos interesantes:
 
-* Indicadores demográficos (Tabla \ref{fig:tiempo} izquierda) : Los datos muestran claramente una tendencia al envejecimiento de la población. Esto se ve reflejado de forma direca en el aumento de la edad media, pero también en otros indicadores. A lo largo de los años, la proporción de población de 0 a 14 años disminuye de forma notable, mientras que aumentan las proporciones de población de 15 a 64 años y de más de 64 años. Esto se ve, reforzado por un descenso de la Tasa de Natalidad (con un pequeño repunte en los últimos años).
+* Indicadores demográficos (Tabla \ref{fig:tiempo} izquierda) : Los datos muestran claramente una tendencia al envejecimiento de la población. Esto se ve reflejado de forma directa en el aumento de la edad media, pero también en otros indicadores. A lo largo de los años, la proporción de población de 0 a 14 años disminuye de forma notable, mientras que aumentan las proporciones de población de 15 a 64 años y de más de 64 años. Esto se ve, reforzado por un descenso de la Tasa de Natalidad (con un pequeño repunte en los últimos años).
 
 * Indicadores económicos (Tabla \ref{fig:tiempo} derecha) : En cuanto a los indicadores económicos, se destacan los relacionados con el empleo. Como era de esperar, la Tasa de Desempleo y la Tasa de Ocupados (de 20 a 64 años) siguen tendencias opuestas con el paso de los años. Durante el periodo analizado, se aprecia una fase de recesión laboral hasta 2013, y tras el final de la crisis de la burbuja inmobiliaria (2008-2014), mejoran las tasas de desempleo y de ocupación, aunque sufren un pequeño descenso en 2019.
 
@@ -1053,7 +1057,7 @@ for (i in 1:ncol(numericas)) {
 
 anexo1_1 <- kable(estadisticos, 
              digits = 2, 
-             caption = "Estadísticos Dataset por Municipios\\label{tabla:anexo1_1}")
+             caption = "Estadísticos dataset por municipios\\label{tabla:anexo1_1}")
 
 
 # En el caso del dataset de Total Nacional:
@@ -1086,7 +1090,7 @@ for (i in 1:ncol(numericas)) {
 
 anexo1_2 <- kable(estadisticos, 
              digits = 1, 
-             caption = "Estadísticos Dataset Total Nacional\\label{tabla:anexo1_2}")
+             caption = "Estadísticos dataset total\\label{tabla:anexo1_2}")
 
 ```
 
@@ -1402,16 +1406,16 @@ Algunas correlaciones positivas fuertes que destacan pueden ser la relación ent
 Por contra, también se observan correlaciones negativas fuertes como, por ejemplo, la relación entre la tasa de actividad (*Tasa_Actividad*) y la edad media de la población (*Edad_Med*) en la figura \ref{fig:diagramas_dispersion_totales}.c. Esta relación refleja que, a medida que la población envejece, aumenta la proporción de personas fuera del mercado laboral, lo que reduce la tasa de actividad. Además, una mayor edad media puede reflejar una menor incorporación de jóvenes al mercado laboral; Otra correlación negativa fuerte es la relación entre la proporción de hogares unipersonales (*Hog_1P*) y la proporción de población en edades económicamente activas (*Pob_15_64*) en la figura \ref{fig:diagramas_dispersion_totales}.d. Esta relación puede sugerir que, a medida que disminuye la población activa, aumenta la proporción de personas mayores que viven solas, lo que refleja el envejecimiento poblacional y los cambios en la estructura familiar, donde las personas mayores tienden a vivir solas.
 
 
-## Visualizacion Mapas
+## Visualizacion con mapas
 
-Para visualizar los datos de toda España, utilizaremos la librería mapSpain. Esta herramienta nos permite representar diversos indicadores sobre el mapa de España. Visualizar los datos en un mapa puede ayudarnos a comprender las correlaciones entre variables y sus evoluciones, además de facilitarnos la tarea de identificar las provincias de las que no disponemos de datos. Dado que contamos con datos de un número reducido de municipios en comparación con el total de municipios en España (8.132), representaremos los datos a nivel provincial, calculando la media para cada una de ellas. El primer paso consistirá en verificar que los nombres de los municipios en nuestra base de datos coinciden con los proporcionados por la librería y resolver cualquier discrepancia que pueda existir.
+Para visualizar los datos de toda España, utilizaremos la librería mapSpain. Esta herramienta nos permite representar diversos indicadores sobre el mapa de España. Visualizar los datos en un mapa puede ayudarnos a comprender las correlaciones entre variables y sus evoluciones, además de facilitarnos la tarea de identificar las provincias de las que no disponemos de datos. Dado que contamos con datos de un número reducido de municipios en comparación con el total de municipios en España (8.132), representaremos los datos a nivel provincial, calculando la media para cada una de ellas. El primer paso consistirá en verificar que los nombres de los municipios en la base de datos con la que estamos trabajando coinciden con los proporcionados por la librería y resolver cualquier discrepancia que pueda existir. Para ello, he modificado los nombres de los municipios en el dataset, cambiándolos por los nombres correctos de los municipios proporcionados, de manera que coincidan.
 
 ```{r, echo = FALSE}
 library(mapSpain)
 library(sf)
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, include=FALSE}
 map_municipios <- esp_get_munic()
 map_municipios_names <- unique(map_municipios$name) # Nombres municipios en la libreria mapSpain
 
@@ -1431,7 +1435,6 @@ cat(texto_envuelto)
 
 ```
 
-Estos municipios son aquellos de los que tenemos datos, pero cuyo nombre no coincide con los de la librería mapSpain. Por lo tanto, mapeamos en nuestro dataset los nombres actuales a los que coinciden en dicha librería.
 
 ```{r, echo = FALSE} 
 names_not_matched_corrected <- c("Alcoy / Alcoi", "Alicante / Alacant", "Castellón de la Plana / Castelló de la Plana", "Donostia / San Sebastián", "Elche / Elx", "Palma de Mallorca", "Pamplona / Iruña", "Sagunto / Sagunt", "San Vicente del Raspeig / Sant Vicent del Raspeig", "Valencia")
@@ -1563,6 +1566,34 @@ g4 <- ggplot(data = map_municipios_2019_ext) +
 grid.arrange(g1, g2, g3, g4, nrow=2, ncol=2)
 
 ```
+
+
+# Conclusiones
+
+
+
+
+* Tras el análisis de los datos, sí se puede ver la influencia de algunos eventos históricos. Se observa una alta tasa de desempleo (y baja de ocupación) en los años previos a 2014, posiblemente relacionado con la crisis de 2008. Los datos también reflejan los efectos del COVID-19, mostrando un repunte en la tasa de mortalidad en el año 2020.
+
+
+
+
+* Además, se ha identificado un incremento en la proporción de población mayor de 65 años, acompañado de una disminución en la proporción de personas entre 15 y 64 años. Dichos comportamientos reflejan un proceso de envejecimiento demográfico. Asimismo, se ha constatado una tendencia decreciente en la tasa de natalidad a lo largo del tiempo. Por último, se han examinado diversos indicadores, como la edad media de la población, la tasa de actividad y la proporción de viviendas unipersonales, los cuales podrían emplearse para evaluar la situación demográfica, dado que presentan una alta correlación con factores como la proporción de personas en el rango de 15 a 64 años y la de mayores de 65 años.
+
+
+
+
+* La tasa de desempleo no muestra una correlación significativa con ningún indicador demográfico en particular. Este hallazgo es especialmente interesante en el caso del porcentaje de extranjeros en la población, ya que podría esperarse que este factor tuviera algún impacto en la tasa de desempleo. Esto podría indicar que los extranjeros están bien integrados en el mercado laboral o que el desempleo puede estar más influenciado por otros factores, como pueden ser económicos, políticos o estructurales, que por características demográficas. 
+
+
+
+
+* Al observar los mapas, se puede notar una clara relación entre los patrones geográficos y algunos indicadores. Por ejemplo, la tasa de desempleo muestra una distribución diferenciada entre el norte y el sur, con valores más altos en algunas regiones del sur de España. Además, el porcentaje de extranjeros también varía geográficamente, siendo más alto en el este del país. Estas diferencias reflejan variaciones notables entre las regiones, que se visualizan claramente en los mapas representados.
+
+
+
+
+
 
 # Anexo 1 {#Anexo}
 
