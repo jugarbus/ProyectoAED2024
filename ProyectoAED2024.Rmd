@@ -101,7 +101,7 @@ Hablar de los 3 datasets y de donde se han obtenido. BLABLABLA
 
 ```{r, include=FALSE}
 rm(list = ls())
-pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate, visdat, ggpubr, mapSpain) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
+pacman::p_load(readr, tidyverse, ggplot2, dplyr, plotly, lubridate, visdat, ggpubr, knitr, mice, DataExplorer, naniar, corrplot, GGally) # verifica si los paquetes están instalados y, si no lo están, los instala y luego los carga
 ```
 
 
@@ -257,14 +257,16 @@ print(duplicated_rows)
 En esta sección previa al análisis univariante y bivariante se va a realizar un análisis de la estructura de los faltantes y del dataset en general. Para asegurar que nuestro conjunto de datos sea coherente, evaluaremos el porcentaje de valores faltantes (NA) presentes en cada variable:
 
 
-
+```{r}
+md.pattern(full_df)
+```
 
 ```{r}
-colSums(is.na(full_df)) / dim(full_df)[1] *100
+kable(colSums(is.na(full_df)) / dim(full_df)[1] *100)
 ```
 
 
-Del dataset completo, es decir, sin discriminar por total nacional ni sexo, únicamente se observan valores faltantes en la variable *Total*, siendo este un valor muy elevado. 
+Del dataset completo, es decir, sin discriminar por total nacional ni sexo, únicamente se observan valores faltantes en la variable *Total*, siendo este un valor muy elevado (71.26%). 
 
 Es importante señalar que durante la importación de los datasets, se eliminaron los datos faltantes en la variable Municipios que correspondían a los valores asociados a "Total Nacional". Por esta razón, se eliminó la columna Total Nacional y se rellenaron los valores NA de *Municipios* con el valor "Total Nacional".
 
@@ -455,7 +457,11 @@ na_ind_list <- result[result$perc < 50,]
 
 # Eliminamos los indicadores que tengan más de 50% de valores faltantes
 clean_total_df <- total_df_nosex %>% filter(Municipios=='Total Nacional') %>% 
-  filter(Indicadores %in% na_ind_list$Indicadores)
+  filter(Indicadores %in% na_ind_list$Indicadores) %>%
+  mutate(
+    Indicadores = as.factor(Indicadores),
+    Ind = as.factor(Ind)
+  ) %>% select(-Municipios)
 ```
 
 
@@ -477,7 +483,12 @@ na_ind_list_2 <- na_ind_count_2[na_ind_count_2$perc < 50,]
 
 # Eliminamos los indicadores que tengan más de 50% de valores faltantes
 clean_mun_df <- total_df_nosex %>% filter(Municipios!='Total Nacional') %>% 
-  filter(Indicadores %in% na_ind_list_2$Indicadores)
+  filter(Indicadores %in% na_ind_list_2$Indicadores) %>%
+  mutate(
+    Municipios = as.factor(Municipios),
+    Indicadores = as.factor(Indicadores),
+    Ind = as.factor(Ind)
+  )
 ```
 
 
@@ -571,20 +582,124 @@ print(head(n_na_period_2, 8))
 El análisis de los datos faltantes revela patrones interesantes. En ambos conjuntos de datos, el año 2023 presenta la mayor proporción de valores faltantes. Sin embargo, en el dataset municipal, se observa un período de estabilidad con un bajo porcentaje de datos faltantes entre 2010 y 2013. A pesar de estas variaciones, el porcentaje total de datos faltantes es relativamente bajo, inferior al 2%. Por lo tanto, se procederá a imputar estos valores para completar el conjunto de datos.
 
 
-Finalmente se observa una mejora de valores faltantes al prescindir de la variable Sexo y de los indicadores con mayor proporción de NAs:
+
+### Por municipios
 
 ```{r}
-colSums(is.na(clean_mun_df)) / dim(clean_mun_df)[1] *100
+clean_mun_df %>%
+  filter(is.na(Total)) %>%
+  count(Municipios, sort = TRUE) %>%
+  ggplot(aes(x = reorder(Municipios, n), y = n)) +
+    geom_bar(stat = "identity", fill = "skyblue") +
+    coord_flip() +  # Voltea el gráfico para que los indicadores estén en el eje y
+    labs(
+      title = "NAs por año del dataset por municipios",
+      x = "Periodo",
+      y = "Cantidad de NA"
+    ) +
+    theme_minimal()
 ```
+```{r}
+n_na_mun <- clean_mun_df %>% 
+  filter(is.na(Total)) %>%
+  count(Municipios, sort = TRUE, name = "n_na")
+
+total_period_2 <- clean_mun_df %>% 
+  count(Municipios, sort = TRUE)
+
+
+n_na_mun$n_total <- total_period_2$n
+
+n_na_mun$perc <- n_na_mun$n_na / total_period_2$n * 100
+n_na_mun$perc_total <- n_na_mun$n_na / dim(clean_mun_df)[1] * 100
+n_na_mun
+```
+
+
+
+
+
+Finalmente se observa una mejora de valores faltantes al prescindir de la variable Sexo y de los indicadores con mayor proporción de NAs:
+
+
 ```{r}
 colSums(is.na(clean_total_df)) / dim(clean_total_df)[1] *100
 ```
+```{r}
+colSums(is.na(clean_mun_df)) / dim(clean_mun_df)[1] *100
+```
 
-
-Estos valores van a ser imputados mediante una medida de tendencia central, dependiendo del indicador al que esté asociada cada observación.
+Estos valores van a ser imputados mediante una medida de tendencia central, dependiendo del indicador al que esté asociada cada observación. Destacar también que se estudió la existencia de observaciones duplicadas, obteniendo ausencia de estas.
 
 
 #### Imputación
+
+
+
+
+
+# USAR MICE ?
+
+
+
+```{r}
+#libreria naniar
+mcar_test(clean_mun_df)
+```
+
+Dado que el valor p es 0, esto sugiere que los datos faltantes no son MCAR. Esto significa que los datos faltantes podrían ser MAR (Missing at Random) o MNAR (Missing Not at Random).
+
+
+```{r}
+#Parecen datos faltantes de tipo MAR (Missing At Random, es decir, dependen de variables observadas)
+
+
+# MICE trabaja con datos en formato wide
+wide_data <- clean_mun_df %>% select(-Indicadores)
+wide_data <- wide_data %>%
+  pivot_wider(
+    names_from = Ind,
+    values_from = Total
+  )
+
+# Imputar los valores faltantes utilizando mice
+# imputed_data <- mice(wide_data %>% select(where(is.numeric)), method = 'rf', m = 5, maxit = 25, seed = 500)
+imputed_data <- mice(wide_data %>% select(where(is.numeric)), method = 'cart', m = 5, maxit = 25, seed = 500)
+
+mice_mun_data <- complete(imputed_data)
+
+# Combinar los datos imputados con las columnas originales (Municipios y Periodo)
+wide_data_imputed <- wide_data
+wide_data_imputed[ , names(mice_mun_data)] <- mice_mun_data
+
+# Para algunos municipios e indicadores, los valores faltantes (NA) están al principio de la serie temporal, sin datos previos disponibles. Por lo tanto, necesitamos imputarlos de forma separada, utilizando extrapolación lineal
+
+wide_data_imputed <- wide_data_imputed %>%
+  group_by(Municipios) %>%
+  mutate(Nac_Ext_Total = zoo::na.approx(Nac_Ext_Total, x = Periodo, rule = 2, na.rm = FALSE))
+
+wide_data_imputed <- wide_data_imputed %>%
+  group_by(Municipios) %>%
+  mutate(Ext_Total = zoo::na.approx(Ext_Total, x = Periodo, rule = 2, na.rm = FALSE))
+
+wide_data_imputed <- wide_data_imputed %>%
+  group_by(Municipios) %>%
+  mutate(Ocup_20_64 = zoo::na.approx(Ocup_20_64, x = Periodo, rule = 2, na.rm = FALSE))
+
+
+# Volvemos al formato tidy
+tidy_data_imputed <- wide_data_imputed %>%
+  pivot_longer(
+    cols = -c(Municipios, Periodo),
+    names_to = "Ind",
+    values_to = "Total"
+  )
+```
+
+
+
+
+
 
 
 
@@ -679,8 +794,147 @@ Para asegurar la consistencia de los datos, se realizó una imputación de los v
 
 ```{r}
 # mun_data  DATAFRAME POR MUNICIPIOS LIMPIO
-# total_data DATAFRAME TOTAL NACIONAL LIMPIO
+# Pivotamos a formato ancho para simplificar el analisis
+wide_mun_data <- tidy_data_imputed %>% pivot_wider(names_from=Ind, values_from=Total)
+wide_mun_data$Periodo <- as.factor(format(wide_mun_data$Periodo, "%Y"))
+
+## Calculamos la matriz de correlacion
+# Seleccionamos solo las columnas numericas
+numeric_data <- wide_mun_data[, sapply(wide_mun_data, is.numeric)]
+
+# Calcular matriz de correlación
+cor_matrix <- cor(numeric_data)
+
+## Visualización con corrplot
+par(mar = c(0.5, 0.5, 1, 0.5))  # Márgenes pequeños
+corrplot(cor_matrix,
+         method = "color",
+         type = "lower",
+         tl.cex = 0.6,           # Tamaño de etiquetas
+         cl.cex = 1,             # Tamaño barra de colores
+         addgrid.col = NA,       # Sin líneas de rejilla
+         tl.col = "black",
+         mar = c(0, 0, 1, 0),    # Eliminar márgenes adicionales
+         title = "Matriz de correlaciones entre indicadores")
+
+# Generar gráficos de dispersión para todos los pares
+ggpairs(numeric_data,
+        title = "Diagramas de dispersión y correlación entre indicadores",
+        progress = TRUE)
+
+ggpairs_plot <- ggpairs(numeric_data, progress = TRUE)
+ggsave("scatterplot_matrix.png", plot = ggpairs_plot, width = 50, height = 50, limitsize = F)
+
+# Convertir matriz de correlación a formato largo
+cor_long <- as.data.frame(as.table(cor_matrix))
+
+# Filtrar correlaciones significativas (|r| > 0.7)
+high_corr <- cor_long[abs(cor_long$Freq) > 0.7 & cor_long$Var1 != cor_long$Var2, ]
+
+# Eliminar duplicados manteniendo solo una de las combinaciones
+high_corr <- high_corr[!duplicated(t(apply(high_corr[, c("Var1", "Var2")], 1, sort))), ]
+
+# Ordenar por magnitud de la correlación
+high_corr <- high_corr[order(-abs(high_corr$Freq)), ]
+high_corr
 ```
+
+```{r}
+for (i in 1:nrow(high_corr)) {
+  var1 <- high_corr[i,]$Var1
+  var2 <- high_corr[i,]$Var2
+  
+  # Crear el diagrama de dispersión
+  plot <- ggplot(wide_mun_data, aes_string(x = as.character(var1), y = as.character(var2))) +
+    geom_point(aes(color = Periodo)) +
+    geom_smooth(method = "lm", se = FALSE, color = "black") +  # Línea de tendencia lineal para cada año
+    theme_minimal() +
+    labs(
+      title = paste("Diagrama de dispersión:", as.character(var1), "vs", as.character(var2)),
+      x = var1,
+      y = var2,
+      caption = paste("Coeficiente de correlación:", round(high_corr[i,]$Freq, 2))
+    )
+  
+  # Mostrar el gráfico
+  print(plot)
+}
+```
+
+
+
+```{r}
+### total_data DATAFRAME TOTAL NACIONAL LIMPIO
+# Pivotamos a formato ancho para simplificar el analisis
+wide_total_data <- total_data %>% pivot_wider(names_from=Indicadores, values_from=Total)
+wide_total_data$Periodo <- as.factor(format(wide_total_data$Periodo, "%Y"))
+colnames(wide_total_data) <- abrev
+
+## Calculamos la matriz de correlacion
+# Seleccionamos solo las columnas numericas
+numeric_data_total <- wide_total_data[, sapply(wide_total_data, is.numeric)]
+
+# Calcular matriz de correlación
+cor_matrix_total <- cor(numeric_data_total)
+
+## Visualización con corrplot
+par(mar = c(0.5, 0.5, 1, 0.5))  # Márgenes pequeños
+corrplot(cor_matrix_total,
+         method = "color",
+         type = "lower",
+         tl.cex = 0.6,           # Tamaño de etiquetas
+         cl.cex = 1,             # Tamaño barra de colores
+         addgrid.col = NA,       # Sin líneas de rejilla
+         tl.col = "black",
+         mar = c(0, 0, 1, 0),    # Eliminar márgenes adicionales
+         title = "Matriz de correlaciones entre indicadores")
+
+# Generar gráficos de dispersión para todos los pares
+ggpairs(numeric_data_total,
+        title = "Diagramas de dispersión y correlación entre indicadores",
+        progress = TRUE)
+
+ggpairs_plot <- ggpairs(numeric_data_total, progress = TRUE)
+ggsave("scatterplot_matrix_total.png", plot = ggpairs_plot, width = 50, height = 50, limitsize = F)
+
+# Convertir matriz de correlación a formato largo
+cor_long_total <- as.data.frame(as.table(cor_matrix_total))
+
+# Filtrar correlaciones significativas (|r| > 0.7)
+high_corr_total <- cor_long_total[abs(cor_long_total$Freq) > 0.7 & cor_long_total$Var1 != cor_long_total$Var2, ]
+
+# Eliminar duplicados manteniendo solo una de las combinaciones
+high_corr_total <- high_corr_total[!duplicated(t(apply(high_corr_total[, c("Var1", "Var2")], 1, sort))), ]
+
+# Ordenar por magnitud de la correlación
+high_corr_total <- high_corr_total[order(-abs(high_corr_total$Freq)), ]
+high_corr_total
+
+```
+
+```{r}
+for (i in 1:nrow(high_corr_total)) {
+  var1 <- high_corr_total[i,]$Var1
+  var2 <- high_corr_total[i,]$Var2
+  
+  # Crear el diagrama de dispersión
+  plot <- ggplot(wide_total_data, aes_string(x = as.character(var1), y = as.character(var2))) +
+    geom_point(aes(color = Periodo)) +
+    geom_smooth(method = "lm", se = FALSE, color = "black") +  # Línea de tendencia lineal para cada año
+    theme_minimal() +
+    labs(
+      title = paste("Diagrama de dispersión:", as.character(var1), "vs", as.character(var2)),
+      x = var1,
+      y = var2,
+      caption = paste("Coeficiente de correlación:", round(high_corr_total[i,]$Freq, 2))
+    )
+  
+  # Mostrar el gráfico
+  print(plot)
+}
+```
+
+
 
 
 ## Visualizacion Mapas
@@ -956,14 +1210,353 @@ grid.arrange(g1, g2, g3, g4, nrow=2, ncol=2)
 
 ```
 
+#
+```{r}
+mun_data_2010 <- mun_data %>%
+  filter(Periodo == as.Date("2010-01-01"),
+         Indicadores == "Tasa de desempleo (Porcentaje)")
+mun_data_2013 <- mun_data %>%
+  filter(Periodo == as.Date("2013-01-01"),
+         Indicadores == "Tasa de desempleo (Porcentaje)")
+mun_data_2016 <- mun_data %>%
+  filter(Periodo == as.Date("2016-01-01"),
+         Indicadores == "Tasa de desempleo (Porcentaje)")
+mun_data_2019 <- mun_data %>%
+  filter(Periodo == as.Date("2019-01-01"),
+         Indicadores == "Tasa de desempleo (Porcentaje)")
 
+
+map_municipios <- esp_get_munic()
+
+# Unir los datos espaciales con los datos filtrados
+map_municipios_2010 <- map_municipios %>%
+  left_join(mun_data_2010, by = c("name" = "Municipios"))
+map_municipios_2010 <- map_municipios_2010 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g1 <- ggplot(data = map_municipios_2010) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray") +  # Escala de color
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2010",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+map_municipios_2013 <- map_municipios %>%
+  left_join(mun_data_2013, by = c("name" = "Municipios"))
+map_municipios_2013 <- map_municipios_2013 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g2 <- ggplot(data = map_municipios_2013) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray") +  # Escala de color
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2013",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+grid.arrange(g1, g2, nrow=1, ncol=2)
+
+```
+
+```{r}
+
+```
+
+
+```{r}
+# Find the min and max values of the indicator for both 2010 and 2013
+min_value <- mun_data %>% filter(Indicadores == "Tasa de desempleo (Porcentaje)") %>% select(Total) %>% min(na.rm = T)
+max_value <- mun_data %>% filter(Indicadores == "Tasa de desempleo (Porcentaje)") %>% select(Total) %>% max(na.rm = T)
+
+# Plot for 2010
+map_municipios_2010 <- map_municipios %>%
+  left_join(mun_data_2010, by = c("name" = "Municipios"))
+map_municipios_2010 <- map_municipios_2010 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g1 <- ggplot(data = map_municipios_2010) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value, max_value), direction = -1) +  # Mismo rango de colores
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2010",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+# Plot for 2013
+map_municipios_2013 <- map_municipios %>%
+  left_join(mun_data_2013, by = c("name" = "Municipios"))
+map_municipios_2013 <- map_municipios_2013 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g2 <- ggplot(data = map_municipios_2013) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value, max_value), direction = -1) +  # Mismo rango de colores
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2013",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+map_municipios_2016 <- map_municipios %>%
+  left_join(mun_data_2016, by = c("name" = "Municipios"))
+map_municipios_2016 <- map_municipios_2016 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g3 <- ggplot(data = map_municipios_2016) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value, max_value), direction = -1) +  # Escala de color
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2016",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+map_municipios_2019 <- map_municipios %>%
+  left_join(mun_data_2019, by = c("name" = "Municipios"))
+map_municipios_2019 <- map_municipios_2019 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g4 <- ggplot(data = map_municipios_2019) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray",limits = c(min_value, max_value), direction = -1) +  # Escala de color
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2019",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+
+grid.arrange(g1, g2, g3, g4, nrow=2, ncol=2)
+
+```
+
+
+```{r}
+#raro 1
+mun_data_2010 <- mun_data %>%
+  filter(Periodo == as.Date("2019-01-01"),
+         Indicadores == "Tasa de desempleo (Porcentaje)")
+mun_data_2013 <- mun_data %>%
+  filter(Periodo == as.Date("2020-01-01"),
+         Indicadores == "Tasa de desempleo (Porcentaje)")
+mun_data_2016 <- mun_data %>%
+  filter(Periodo == as.Date("2021-01-01"),
+         Indicadores == "Tasa de desempleo (Porcentaje)")
+mun_data_2019 <- mun_data %>%
+  filter(Periodo == as.Date("2022-01-01"),
+         Indicadores == "Tasa de desempleo (Porcentaje)")
+# Find the min and max values of the indicator for both 2010 and 2013
+min_value <- mun_data %>% filter(Indicadores == "Tasa de desempleo (Porcentaje)") %>% select(Total) %>% min(na.rm = T)
+max_value <- mun_data %>% filter(Indicadores == "Tasa de desempleo (Porcentaje)") %>% select(Total) %>% max(na.rm = T)
+
+# Plot for 2010
+map_municipios_2010 <- map_municipios %>%
+  left_join(mun_data_2010, by = c("name" = "Municipios"))
+map_municipios_2010 <- map_municipios_2010 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g1 <- ggplot(data = map_municipios_2010) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value, max_value), direction = -1) +  # Mismo rango de colores
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2010",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+# Plot for 2013
+map_municipios_2013 <- map_municipios %>%
+  left_join(mun_data_2013, by = c("name" = "Municipios"))
+map_municipios_2013 <- map_municipios_2013 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g2 <- ggplot(data = map_municipios_2013) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value, max_value), direction = -1) +  # Mismo rango de colores
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2013",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+map_municipios_2016 <- map_municipios %>%
+  left_join(mun_data_2016, by = c("name" = "Municipios"))
+map_municipios_2016 <- map_municipios_2016 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g3 <- ggplot(data = map_municipios_2016) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value, max_value), direction = -1) +  # Escala de color
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2016",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+map_municipios_2019 <- map_municipios %>%
+  left_join(mun_data_2019, by = c("name" = "Municipios"))
+map_municipios_2019 <- map_municipios_2019 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g4 <- ggplot(data = map_municipios_2019) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray",limits = c(min_value, max_value), direction = -1) +  # Escala de color
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2019",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+
+grid.arrange(g1, g2, g3, g4, nrow=2, ncol=2)
+
+```
+
+```{r}
+unique(mun_data$Indicadores)
+```
+
+
+
+```{r}
+#raro 2
+mun_data_2010 <- mun_data %>%
+  filter(Periodo == as.Date("2019-01-01"),
+         Indicadores == "Proporción de empleo en industria (NACE Rev.2 B-E) (Porcentaje)")
+mun_data_2013 <- mun_data %>%
+  filter(Periodo == as.Date("2020-01-01"),
+         Indicadores == "Proporción de empleo en industria (NACE Rev.2 B-E) (Porcentaje)")
+mun_data_2016 <- mun_data %>%
+  filter(Periodo == as.Date("2021-01-01"),
+         Indicadores == "Proporción de empleo en industria (NACE Rev.2 B-E) (Porcentaje)")
+mun_data_2019 <- mun_data %>%
+  filter(Periodo == as.Date("2022-01-01"),
+         Indicadores == "Proporción de empleo en industria (NACE Rev.2 B-E) (Porcentaje)")
+# Find the min and max values of the indicator for both 2010 and 2013
+min_value <- mun_data %>% filter(Indicadores == "Proporción de empleo en industria (NACE Rev.2 B-E) (Porcentaje)") %>% select(Total) %>% min(na.rm = T)
+max_value <- mun_data %>% filter(Indicadores == "Proporción de empleo en industria (NACE Rev.2 B-E) (Porcentaje)") %>% select(Total) %>% max(na.rm = T)
+
+# Plot for 2010
+map_municipios_2010 <- map_municipios %>%
+  left_join(mun_data_2010, by = c("name" = "Municipios"))
+map_municipios_2010 <- map_municipios_2010 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g1 <- ggplot(data = map_municipios_2010) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value, max_value), direction = -1) +  # Mismo rango de colores
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2010",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+# Plot for 2013
+map_municipios_2013 <- map_municipios %>%
+  left_join(mun_data_2013, by = c("name" = "Municipios"))
+map_municipios_2013 <- map_municipios_2013 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g2 <- ggplot(data = map_municipios_2013) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value, max_value), direction = -1) +  # Mismo rango de colores
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2013",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+map_municipios_2016 <- map_municipios %>%
+  left_join(mun_data_2016, by = c("name" = "Municipios"))
+map_municipios_2016 <- map_municipios_2016 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g3 <- ggplot(data = map_municipios_2016) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray", limits = c(min_value, max_value), direction = -1) +  # Escala de color
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2016",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+map_municipios_2019 <- map_municipios %>%
+  left_join(mun_data_2019, by = c("name" = "Municipios"))
+map_municipios_2019 <- map_municipios_2019 %>%
+  group_by(ine.prov.name) %>%
+  mutate(Total = mean(Total, na.rm = TRUE)) %>%
+  group_by(ine.prov.name, Total) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+g4 <- ggplot(data = map_municipios_2019) +
+  geom_sf(aes(fill = Total), color = "white") +  # Colorear por el indicador
+  scale_fill_viridis_c(option = "rocket", na.value = "lightgray",limits = c(min_value, max_value), direction = -1) +  # Escala de color
+  theme_minimal() +
+  labs(title = "Tasa de desempleo (Porcentaje)",
+       subtitle = "Año 2019",
+       fill = "Porcentaje",
+       caption = "Fuente: Datos propios y mapSpain")
+
+
+grid.arrange(g1, g2, g3, g4, nrow=2, ncol=2)
+
+```
+
+#
 
 # TODOS LOS MAPAS
 Creamos todos los mapas (todos los indicadores y años) y los guardamos en un directorio llamado "graficos_mapas".
+```{r}
+mun_data %>% filter(Indicadores == "Población residente (Personas)") %>% select(Total) %>% min(na.rm = T) %>% print()
+mun_data %>% filter(Indicadores == "Población residente (Personas)") %>% select(Total) %>% max(na.rm = T) %>% print()
+```
 
 ```{r}
 # Crear directorio para guardar los mapas
-output_dir <- "graficos_mapas"
+output_dir <- "graficos_mapas_ajustado"
 dir.create(output_dir, showWarnings = FALSE)
 
 indicadores <- unique(mun_data$Indicadores)
@@ -977,6 +1570,8 @@ for (indicador in indicadores) {
   fech_inicio <- min(mun_data_generico$Periodo)
   fech_final <- max(mun_data_generico$Periodo)
   fechas_bucle <- seq(fech_inicio, fech_final, by = "year")
+  min_value <- mun_data %>% filter(Indicadores == indicador) %>% select(Total) %>% min(na.rm = T)
+  max_value <- mun_data %>% filter(Indicadores == indicador) %>% select(Total) %>% max(na.rm = T)
   
   for (fecha in fechas_bucle) {
     fecha <- as.Date(fecha)
@@ -994,7 +1589,7 @@ for (indicador in indicadores) {
 
     map <- ggplot(data = map_municipios_generico_fecha) +
       geom_sf(aes(fill = Total), color = "white") +
-      scale_fill_viridis_c(option = "plasma", na.value = "lightgray") +
+      scale_fill_viridis_c(option = "rocket", na.value = "lightgray",limits = c(min_value, max_value)) +
       theme_minimal() +
       labs(title = paste(indicador),
            subtitle = paste("Año", fecha),
@@ -1011,9 +1606,4 @@ for (indicador in indicadores) {
 
 ```
 
-```{r}
-for(fecha in fechas_bucle){
-  print(as.Date(fecha))
-}
-```
 
